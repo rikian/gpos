@@ -1,0 +1,26 @@
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?android:attr/colorControlHighlight">
+
+    <item>
+        <!-- Shadow for the default state -->
+        <shape android:shape="oval">
+            <solid android:color="#8D000000" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+
+    <item android:state_pressed="false">
+        <!-- Oval shape for the default state -->
+        <shape android:shape="oval">
+            <solid android:color="@color/purple_500"/>
+        </shape>
+    </item>
+
+    <item android:state_pressed="true">
+        <!-- Oval shape for the pressed state -->
+        <shape android:shape="oval">
+            <solid android:color="#680FE8"/>
+        </shape>
+    </item>
+
+</ripple>
