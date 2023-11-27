@@ -71,9 +71,9 @@ interface Repository {
     @Insert
     fun createOwner(data: OwnerEntity)
 
-    @Query("Update owner SET bluetoothPaired=:name")
+    @Query("Update owner SET bluetoothPaired=:name WHERE id='001'")
     fun updateBluetooth(name: String)
 
-    @Query("SELECT * FROM owner Limit 1")
-    fun getOwnerData(): OwnerEntity
+    @Query("SELECT bluetoothPaired FROM owner WHERE id='001'")
+    fun getOwnerBluetooth(): String
 }

@@ -2,6 +2,7 @@ package com.gulali.gpos
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -20,6 +21,7 @@ class Setting : AppCompatActivity() {
     private lateinit var binding: SettingBinding
     private lateinit var bluetoothListAdapter: BluetoothListAdapter
     private lateinit var gposRepo: Repository
+    private lateinit var data: OwnerEntity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +29,19 @@ class Setting : AppCompatActivity() {
             binding = it
             setContentView(binding.root)
             gposRepo = AdapterDb.getGposDatabase(this).repository()
+            data = OwnerEntity(
+                id = "001",
+                shop = "Untung Melulu",
+                owner = "Sanusi",
+                address= "JL. Terus Belok Kiri" ,
+                phone= "0812345678",
+                discountPercent= 0.0,
+                discountNominal= 1000,
+                adm= 1000,
+                bluetoothPaired = "",
+                createdAt= "",
+                updatedAt= "",
+            )
         }
 
         binding.btngetpired.setOnClickListener {
@@ -57,23 +72,14 @@ class Setting : AppCompatActivity() {
         }
 
         binding.setSave.setOnClickListener {
-            val data = OwnerEntity(
-                id = "001",
-                shop = "Untung Melulu",
-                owner = "Sanusi",
-                address= "JL. Terus Belok Kiri" ,
-                phone= "0812345678",
-                discountPercent= 0.0,
-                discountNominal= 1000,
-                adm= 1000,
-                bluetoothPaired = "",
-                createdAt= "",
-                updatedAt= "",
-            )
             gposRepo.createOwner(data)
         }
 
-        binding.setUpdate.setOnClickListener {  }
+        binding.setUpdate.setOnClickListener {
+            data.bluetoothPaired = binding.printerName.text.toString()
+            gposRepo.updateBluetooth(data.bluetoothPaired)
+            Toast.makeText(applicationContext, "updated bluetooth", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onResume() {
@@ -84,7 +90,7 @@ class Setting : AppCompatActivity() {
             return
         }
 
-        showListPairedDevice(pairedDevice)
+        showListPairedDevice(this, pairedDevice)
     }
 
     private fun getPairedDevice(): MutableList<String> {
@@ -118,8 +124,15 @@ class Setting : AppCompatActivity() {
         return pairedDevice
     }
 
-    private fun showListPairedDevice(item: List<String>) {
-        bluetoothListAdapter = BluetoothListAdapter(item)
+    private fun showListPairedDevice(ctx: Context, item: List<String>) {
+        bluetoothListAdapter = BluetoothListAdapter(ctx, item)
+        bluetoothListAdapter.setOnItemClickListener(object : BluetoothListAdapter.OnItemClickListener{
+            override fun onItemClick(position: Int) {
+                val bluetoothName = item[position]
+                binding.printerName.text = bluetoothName
+                return
+            }
+        })
         binding.recyclerView.adapter = bluetoothListAdapter
     }
 

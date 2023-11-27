@@ -487,7 +487,7 @@ class AddTransaction: AppCompatActivity() {
             }
         }
         saveAndPrint.setOnClickListener {
-            generateStruckPayment(helper.rupiahToInt(cashConsumer.text.toString()))
+            generateStruckPayment(ctx, helper.rupiahToInt(cashConsumer.text.toString()))
 //            alertDialog.dismiss()
 //            finish()
         }
@@ -509,7 +509,7 @@ class AddTransaction: AppCompatActivity() {
         return true
     }
 
-    private fun generateStruckPayment(cashConsumer: Int) {
+    private fun generateStruckPayment(ctx: Context, cashConsumer: Int) {
         if (!checkPermissionBluetooth()) return
 
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
@@ -529,7 +529,15 @@ class AddTransaction: AppCompatActivity() {
             return
         }
 
-        val deviceName = "RPP02"
+        val deviceName = gposRepo.getOwnerBluetooth()
+
+        if (deviceName == "") {
+            Intent(this, Setting::class.java).also { intent ->
+                startActivity(intent)
+            }
+            return
+        }
+
         var deviceAddress = ""
         val pairedDevices = bluetoothAdapter.bondedDevices
         for (device in pairedDevices) {
@@ -542,6 +550,7 @@ class AddTransaction: AppCompatActivity() {
         }
 
         if (deviceAddress == "") {
+            helper.generateTOA(ctx, "Printer not found\nis printer on?", true)
             return
         }
 
