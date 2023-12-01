@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/products_display"
     android:layout_width="match_parent"
@@ -11,21 +10,42 @@
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent">
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/pr_header"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#2a62ff"
+        android:padding="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/textView26"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Products"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0">
+        app:layout_constraintTop_toBottomOf="@+id/pr_header">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/purple_500">
+            android:layout_height="wrap_content">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:layout_width="match_parent"
@@ -53,20 +73,21 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="20dp"
-                            android:text="Total Products"
+                            android:text="Purchase Amount"
                             android:textColor="@color/black"
+                            android:textSize="16sp"
                             android:textStyle="bold"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
                         <TextView
-                            android:id="@+id/total_profit"
+                            android:id="@+id/textView22"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
                             android:gravity="center"
-                            android:text="5"
+                            android:text="Rp99.999.999"
                             android:textColor="@color/black"
                             android:textSize="20sp"
                             android:textStyle="bold"
@@ -80,6 +101,7 @@
                         android:layout_height="100dp"
                         android:layout_margin="10dp"
                         android:background="@drawable/bg_white"
+                        android:elevation="2dp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toEndOf="@+id/constraintLayout11"
@@ -90,7 +112,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="20dp"
-                            android:text="Estimated Profit"
+                            android:text="Profit"
                             android:textColor="@color/black"
                             android:textStyle="bold"
                             app:layout_constraintEnd_toEndOf="parent"
@@ -98,7 +120,7 @@
                             app:layout_constraintTop_toTopOf="parent" />
 
                         <TextView
-                            android:id="@+id/estimated_profit"
+                            android:id="@+id/textView25"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
@@ -124,8 +146,10 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_margin="10dp">
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="10dp">
 
                 <ImageButton
                     android:id="@+id/filter_products"
@@ -146,7 +170,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
-                    android:background="@null"
+                    android:background="@drawable/bg_white"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/filter_products"
@@ -156,21 +180,23 @@
                         android:id="@+id/inp_barcode"
                         android:layout_width="0dp"
                         android:layout_height="48dp"
-                        android:background="@color/white"
-                        android:hint="Input barcode"
+                        android:background="@null"
+                        android:hint="Search product"
                         android:paddingStart="5dp"
                         android:paddingEnd="5dp"
                         android:singleLine="true"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@+id/btn_scan_bc2"
+                        app:layout_constraintHorizontal_bias="0.0"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintVertical_bias="0.0" />
 
                     <ImageButton
                         android:id="@+id/btn_scan_bc2"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:background="@color/white"
+                        android:background="@null"
                         android:contentDescription="button for scan barcode"
                         android:src="@drawable/baseline_qr_code_scanner_24"
                         app:layout_constraintBottom_toBottomOf="parent"
@@ -196,12 +222,12 @@
                     android:id="@+id/product_list"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
+                    android:layout_weight="1"
                     android:paddingTop="10dp"
                     android:paddingBottom="50dp"
-                    android:layout_weight="1"
                     app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-                    app:spanCount="2"
-                    app:layout_constraintBottom_toTopOf="@+id/textView27" />
+                    app:layout_constraintBottom_toTopOf="@+id/textView27"
+                    app:spanCount="2" />
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"

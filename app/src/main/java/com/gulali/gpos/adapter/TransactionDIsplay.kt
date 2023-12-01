@@ -28,6 +28,7 @@ class TransactionDisplay(
         var tItem: TextView = view.findViewById(R.id.transaction_item)
         var tTotal: TextView = view.findViewById(R.id.total_payment)
         var tCreate: TextView = view.findViewById(R.id.payment_created)
+        var isNew: TextView = view.findViewById(R.id.is_new)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionDisplay.PDViewHolder {
@@ -43,6 +44,10 @@ class TransactionDisplay(
     override fun onBindViewHolder(holder: PDViewHolder, position: Int) {
         holder.itemView.setOnClickListener {
             itemClickListener?.onItemClick(position)
+        }
+
+        if (position == 0) {
+            holder.isNew.visibility = View.VISIBLE
         }
 
         val tr = transaction[position]

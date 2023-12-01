@@ -11,7 +11,8 @@ import androidx.room.RoomDatabase
         ProductEntity::class,
         UnitEntity::class,
         TransactionEntity::class,
-        ProductTransaction::class],
+        ProductTransaction::class,
+        CategoryEntity::class ],
     version = 1.1.toInt()
 )
 abstract class AdapterDb: RoomDatabase() {

@@ -48,9 +48,7 @@ class AddTransaction: AppCompatActivity() {
     private var searchProductViaBarcode: Boolean = false
     private var productTransaction: MutableList<ProductTransaction> = mutableListOf()
     private lateinit var products: List<ProductModel>
-    private var doubleBackToExitPressedOnce = false
-    private var exitFromTransaction = false
-    private var cashValueNominal = intArrayOf(1, 2, 5, 10, 20, 50, 100)
+    private var isDialogActive = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,9 +76,9 @@ class AddTransaction: AppCompatActivity() {
         }
 
         binding.payout.setOnClickListener {
-//            if (productTransaction.size == 0) {
-//                return@setOnClickListener helper.generateTOA(this, "Please insert product to cart before payout", true)
-//            }
+            if (productTransaction.size == 0) {
+                return@setOnClickListener helper.generateTOA(this, "Please insert product to cart before payout", true)
+            }
             showPayment(this)
         }
 
@@ -609,7 +607,7 @@ class AddTransaction: AppCompatActivity() {
         // update stock
         for (p in productTransaction) {
             val prod = gposRepo.getProductByID(p.pID)
-            gposRepo.updateProduct(p.pID, prod.stock - p.pQty)
+            gposRepo.updateStockProduct(p.pID, prod.stock - p.pQty)
         }
         gposRepo.saveProductTransaction(productTransaction)
     }
@@ -631,7 +629,6 @@ class AddTransaction: AppCompatActivity() {
         try {
             if (p.stock <= 0) {
                 helper.generateTOA(ctx, "Stock empty!!", true)
-                // disable item click
                 return
             }
             if (productTransaction.size != 0 && isProductTransactionExistInCart(p.id)) {
@@ -651,7 +648,8 @@ class AddTransaction: AppCompatActivity() {
             )
             showProductQTY(pCoo, p.stock, p.img, false, ctx)
         } catch (e: Exception) {
-            Toast.makeText(applicationContext, e.message.toString(), Toast.LENGTH_SHORT).show()
+            println(e.message)
+            Toast.makeText(applicationContext, "something wrong", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -678,6 +676,7 @@ class AddTransaction: AppCompatActivity() {
             val builder = AlertDialog.Builder(ctx)
             val inflater = layoutInflater
             val dialogLayout = inflater.inflate(R.layout.product_qty, null)
+            val alertDialog = builder.setView(dialogLayout).show() // Create and show the AlertDialog
 
             // text display
             val displayImage  = dialogLayout.findViewById<ImageView>(R.id.product_image)
@@ -704,10 +703,23 @@ class AddTransaction: AppCompatActivity() {
             val priceAfterDiscount = dialogLayout.findViewById<TextView>(R.id.tot_af_dis)
             val pdOk = dialogLayout.findViewById<Button>(R.id.btn_qty_ok)
             val pdCancel = dialogLayout.findViewById<Button>(R.id.btn_qty_cancel)
+            val pdDelete = dialogLayout.findViewById<Button>(R.id.btn_del_pic)
             val pdQty = dialogLayout.findViewById<EditText>(R.id.anp_qty_tot)
             if (isUpdate) {
+                pdCancel.visibility = View.GONE
+                pdDelete.visibility = View.VISIBLE
+                pdDelete.setOnClickListener {
+                    deleteProductInCart(prod.pID)
+                    showProductInCart(productTransaction, ctx)
+                    binding.totpricecart.text = helper.intToRupiah(getCurrentTotalPriceInCart())
+                    val totItemValue = "(${productTransaction.size} item)"
+                    binding.totitem.text = totItemValue
+                    alertDialog.dismiss()
+                }
                 pdDiscount.setText(prod.pDiscount.toString())
                 pdQty.setText(prod.pQty.toString())
+            } else {
+                pdCancel.setOnClickListener { alertDialog.dismiss() }
             }
             val pdQtyMin = dialogLayout.findViewById<Button>(R.id.anp_qty_min)
             val pdQtyPlus = dialogLayout.findViewById<Button>(R.id.anp_qty_plus)
@@ -784,7 +796,6 @@ class AddTransaction: AppCompatActivity() {
                     pdDiscount.setText(s.toString())
                 }
             })
-            val alertDialog = builder.setView(dialogLayout).show() // Create and show the AlertDialog
             pdOk.setOnClickListener {
                 if (isUpdate) {
                     for (p in productTransaction) {
@@ -803,9 +814,24 @@ class AddTransaction: AppCompatActivity() {
                 binding.totitem.text = totItemValue
                 alertDialog.dismiss()
             }
-            pdCancel.setOnClickListener { alertDialog.dismiss() }
         } catch (e: Exception) {
             helper.generateTOA(applicationContext, "product not found", true)
+        }
+    }
+
+    private fun deleteProductInCart(pID: Int):Boolean {
+        return try {
+            var idxProductInCart = 0
+            for (p in productTransaction) {
+                if (p.pID == pID) {
+                    productTransaction.removeAt(idxProductInCart)
+                    break
+                }
+                idxProductInCart += 1
+            }
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 

@@ -25,6 +25,7 @@ import com.google.mlkit.vision.codescanner.GmsBarcodeScanner
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.gulali.gpos.R
+import com.gulali.gpos.database.CategoryEntity
 import com.gulali.gpos.database.ProductModel
 import com.gulali.gpos.database.UnitEntity
 import java.io.File
@@ -183,6 +184,18 @@ open class Helper {
     }
 
     fun readUnitByName(name: String, listSpinner: List<UnitEntity>): UnitEntity? {
+        if (listSpinner.isEmpty()) {
+            return null
+        }
+        for (v in listSpinner) {
+            if (v.name == name) {
+                return v
+            }
+        }
+        return null
+    }
+
+    fun readCategoryByName(name: String, listSpinner: List<CategoryEntity>): CategoryEntity? {
         if (listSpinner.isEmpty()) {
             return null
         }

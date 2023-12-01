@@ -7,6 +7,7 @@ data class ProductModel(
     val img: String,
     var barcode: String,
     val name: String,
+    var category: String,
     val stock: Int,
     val unit: String,
     var price: Int,

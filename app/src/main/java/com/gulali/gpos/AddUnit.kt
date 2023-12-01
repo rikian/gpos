@@ -12,7 +12,7 @@ class AddUnit : AppCompatActivity() {
     private lateinit var helper: com.gulali.gpos.helper.Helper
     private lateinit var unitEntity: UnitEntity
     private lateinit var gposRepo: Repository
-    private var duplecateConstraint = "UNIQUE constraint failed: units.name (code 2067 SQLITE_CONSTRAINT_UNIQUE[2067])"
+    private var duplicateConstraint = "UNIQUE constraint failed: units.name (code 2067 SQLITE_CONSTRAINT_UNIQUE[2067])"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,9 +23,13 @@ class AddUnit : AppCompatActivity() {
         gposRepo = AdapterDb.getGposDatabase(applicationContext).repository()
         helper = com.gulali.gpos.helper.Helper()
         binding.saveUnit.setOnClickListener {
-            val unitName = binding.unitName.text.toString()
+            val unitName = binding.unitName.text.toString().trim()
             if (unitName == "") {
                 helper.generateTOA(this, "Unit cannot be empty", true)
+                return@setOnClickListener
+            }
+            if (unitName.length > 16) {
+                helper.generateTOA(this, "Max name 16 character", true)
                 return@setOnClickListener
             }
 
@@ -39,7 +43,7 @@ class AddUnit : AppCompatActivity() {
                 gposRepo.insertUnit(unitEntity)
                 finish()
             } catch (e: Exception) {
-                if (e.message == duplecateConstraint) {
+                if (e.message == duplicateConstraint) {
                     helper.generateTOA(this, "unit $unitName already exist", false)
                     return@setOnClickListener
                 } else {

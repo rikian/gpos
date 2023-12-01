@@ -14,15 +14,28 @@ data class UnitEntity (
     var updatedAt: String,
 )
 
+@Entity(tableName = "categories", indices = [Index(value = ["name"], unique = true)])
+data class CategoryEntity (
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    var name: String,
+    var createdAt: String,
+    var updatedAt: String,
+)
+
 @Entity(
     tableName = "products",
-    foreignKeys = [ForeignKey(entity = UnitEntity::class, parentColumns = ["id"], childColumns = ["unit"])]
+    foreignKeys = [
+        ForeignKey(entity = UnitEntity::class, parentColumns = ["id"], childColumns = ["unit"]),
+        ForeignKey(entity = CategoryEntity::class, parentColumns = ["id"], childColumns = ["category"]),
+    ]
 )
 data class ProductEntity (
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    var id: Int = 0,
     var image: String,
     var name: String,
+    var category: Int,
     var barcode: String,
     var stock: Int,
     var unit: Int,
@@ -83,6 +96,8 @@ data class OwnerEntity(
     var phone: String,
     var discountPercent: Double,
     var discountNominal: Int,
+    var taxPercent: Double,
+    var taxNominal: Int,
     var adm: Int,
     var bluetoothPaired: String,
     var createdAt: String,

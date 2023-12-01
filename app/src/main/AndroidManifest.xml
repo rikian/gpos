@@ -35,6 +35,12 @@
         android:theme="@style/Theme.GPOS"
         tools:targetApi="34">
         <activity
+            android:name=".TransactionDetails"
+            android:exported="false" />
+        <activity
+            android:name=".AddCategory"
+            android:exported="false" />
+        <activity
             android:name=".Setting"
             android:exported="false" />
 
@@ -59,7 +65,8 @@
             android:exported="false" />
         <activity
             android:name=".AddTransaction"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".Printer"
             android:exported="false" />
@@ -68,6 +75,9 @@
             android:exported="false" />
         <activity
             android:name=".Index"
+            android:exported="false" />
+        <activity
+            android:name=".Registration"
             android:exported="true"
             android:theme="@style/Theme.GPOS">
             <intent-filter>

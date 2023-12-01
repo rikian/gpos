@@ -8,11 +8,15 @@
     android:layout_marginTop="4dp"
     android:layout_marginEnd="10dp"
     android:layout_marginBottom="4dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
     app:cardCornerRadius="10dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@color/white">
 
         <!-- Transaction Number -->
 
@@ -24,6 +28,7 @@
             android:padding="10dp"
             android:text="9999"
             android:textColor="@color/black"
+            android:textSize="11sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -40,11 +45,25 @@
 
             <!-- Id Payment Label -->
             <TextView
+                android:id="@+id/is_new"
+                android:layout_width="50dp"
+                android:layout_height="25dp"
+                android:background="@drawable/bg_primary"
+                android:gravity="center"
+                android:text="New"
+                android:textColor="@color/white"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
                 android:id="@+id/payment_created"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="23 Jan 2024 (10:30:40)"
                 android:textColor="@color/black"
+                android:textSize="14sp"
+                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -53,6 +72,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Id"
+                android:textSize="12sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/payment_created" />
 
@@ -64,6 +84,7 @@
                 android:layout_marginStart="5dp"
                 android:text="TextView"
                 android:textColor="@color/black"
+                android:textSize="12sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/textView18"
                 app:layout_constraintTop_toBottomOf="@+id/payment_created" />
@@ -84,6 +105,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Total"
+                    android:textSize="12sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -96,6 +118,7 @@
                     android:layout_marginStart="5dp"
                     android:text="(4 items)"
                     android:textColor="@color/black"
+                    android:textSize="12sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/textView20"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -105,8 +128,9 @@
                     android:id="@+id/textView21"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingBottom="3dp"
+                    android:paddingBottom="2dp"
                     android:text="Rp"
+                    android:textSize="12sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/total_payment" />
 
@@ -117,7 +141,8 @@
                     android:layout_height="wrap_content"
                     android:text="99.999.999"
                     android:textColor="@color/black"
-                    android:textSize="20sp"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />

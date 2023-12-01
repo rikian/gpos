@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/transaction_display"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,19 +12,44 @@
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent">
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/tr_header"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_height="50dp"
+        android:background="#2a62ff"
+        android:padding="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <TextView
+            android:id="@+id/textView26"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Transaction"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/coordinatorLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tr_header"
+        app:layout_constraintVertical_bias="0.0">
+
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/purple_500">
+            android:layout_height="wrap_content">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:layout_width="match_parent"
@@ -41,6 +67,9 @@
                         android:layout_margin="10dp"
                         android:background="@drawable/bg_white"
                         android:elevation="2dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?android:attr/selectableItemBackground"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@+id/guideline4"
                         app:layout_constraintStart_toStartOf="parent"
@@ -53,7 +82,7 @@
                             android:layout_marginTop="20dp"
                             android:text="Purchase Amount"
                             android:textColor="@color/black"
-                            android:textSize="16sp"
+                            android:textSize="14sp"
                             android:textStyle="bold"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
@@ -67,7 +96,7 @@
                             android:gravity="center"
                             android:text="Rp99.999.999"
                             android:textColor="@color/black"
-                            android:textSize="20sp"
+                            android:textSize="16sp"
                             android:textStyle="bold"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
@@ -79,6 +108,7 @@
                         android:layout_height="100dp"
                         android:layout_margin="10dp"
                         android:background="@drawable/bg_white"
+                        android:elevation="2dp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toEndOf="@+id/constraintLayout11"
@@ -103,8 +133,8 @@
                             android:layout_marginTop="10dp"
                             android:gravity="center"
                             android:text="Rp99.999.999"
-                            android:textColor="@color/purple_500"
-                            android:textSize="20sp"
+                            android:textColor="@color/black"
+                            android:textSize="16sp"
                             android:textStyle="bold"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
@@ -121,76 +151,69 @@
 
             </com.google.android.material.appbar.CollapsingToolbarLayout>
 
-            <HorizontalScrollView
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_margin="10dp">
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="10dp">
+
+                <ImageButton
+                    android:id="@+id/filter_transaction"
+                    android:layout_width="70dp"
+                    android:layout_height="50dp"
+                    android:background="@drawable/bg_white"
+                    android:contentDescription="for filter transaction base on date"
+                    android:src="@drawable/baseline_filter_list_24"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/primary" />
 
                 <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent">
+                    android:id="@+id/p_search"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_white"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/filter_transaction"
+                    app:layout_constraintTop_toTopOf="parent">
 
-                    <ImageButton
-                        android:id="@+id/imageButton2"
-                        android:layout_width="71dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="10dp"
-                        android:background="@drawable/bg_white"
-                        android:contentDescription="for fiter transaction base on date"
-                        android:src="@drawable/baseline_filter_list_24"
+                    <androidx.appcompat.widget.AppCompatEditText
+                        android:id="@+id/inp_barcode"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:background="@null"
+                        android:hint="Search transaction"
+                        android:paddingStart="5dp"
+                        android:paddingEnd="5dp"
+                        android:singleLine="true"
+                        android:textSize="14sp"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@+id/textView26"
-                        app:layout_constraintHorizontal_bias="0.5"
+                        app:layout_constraintEnd_toStartOf="@+id/btn_scan_transaction"
+                        app:layout_constraintHorizontal_bias="0.0"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:tint="@color/purple_500" />
+                        app:layout_constraintVertical_bias="0.0" />
 
-                    <TextView
-                        android:id="@+id/textView26"
-                        android:layout_width="71dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="10dp"
-                        android:background="@drawable/bg_white"
-                        android:gravity="center"
-                        android:text="Today"
-                        android:textColor="@color/black"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@+id/textView28"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toEndOf="@+id/imageButton2"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:id="@+id/textView28"
-                        android:layout_width="71dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="10dp"
-                        android:background="@drawable/bg_white"
-                        android:gravity="center"
-                        android:text="Week"
-                        android:textColor="@color/black"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@+id/textView29"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toEndOf="@+id/textView26"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:id="@+id/textView29"
-                        android:layout_width="72dp"
-                        android:layout_height="50dp"
-                        android:background="@drawable/bg_white"
-                        android:gravity="center"
-                        android:text="Year"
-                        android:textColor="@color/black"
+                    <ImageButton
+                        android:id="@+id/btn_scan_transaction"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@null"
+                        android:contentDescription="button for scan barcode"
+                        android:src="@drawable/baseline_qr_code_scanner_24"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toEndOf="@+id/textView28"
                         app:layout_constraintTop_toTopOf="parent" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
-            </HorizontalScrollView>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -237,7 +260,7 @@
                     android:gravity="center"
                     android:text="No more items available"
                     android:textColor="@color/black"
-                    android:textSize="16sp"/>
+                    android:textSize="16sp" />
 
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
