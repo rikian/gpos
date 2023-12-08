@@ -17,6 +17,9 @@ interface Repository {
     @Insert
     fun insertUnit(data: UnitEntity): Long
 
+    @Query("DELETE FROM units")
+    fun truncateUnitTable()
+
     // category
     @Query("SELECT * FROM categories")
     fun getCategories(): List<CategoryEntity>
@@ -26,6 +29,9 @@ interface Repository {
 
     @Insert
     fun insertCategory(data: CategoryEntity): Long
+
+    @Query("DELETE FROM categories")
+    fun truncateCategoriesTable()
 
     // Product
     @Query(
@@ -57,12 +63,21 @@ interface Repository {
     @Query("UPDATE products SET stock=:stock WHERE id=:id")
     fun updateStockProduct(id: Int, stock: Int)
 
+    @Query("DELETE FROM products")
+    fun truncateProductsTable()
+
     // transaction
     @Insert
     fun saveTransaction(data: TransactionEntity)
 
-    @Query("SELECT * FROM `transaction`")
+    @Query("SELECT * FROM `transaction` ORDER BY createdAt DESC")
     fun getTransaction(): List<TransactionEntity>
+
+    @Query("SELECT * FROM `transaction` WHERE id=:idTransaction LIMIT 1")
+    fun getTransactionById(idTransaction: String): TransactionEntity
+
+    @Query("DELETE FROM `transaction`")
+    fun truncateTransactionTable()
 
 //    @Query()
 //    fun getTransactionDetail(idTransaction: String): TransactionDetail
@@ -80,6 +95,9 @@ interface Repository {
     @Query("SELECT * FROM product_transaction WHERE pID = :query")
     fun getProductTransactionByProductID(query: Int): List<ProductTransaction>
 
+    @Query("DELETE FROM product_transaction")
+    fun truncateProductTransactionTable()
+
     // owner
     @Insert
     fun createOwner(data: OwnerEntity)
@@ -95,4 +113,7 @@ interface Repository {
 
     @Query("SELECT bluetoothPaired FROM owner WHERE id='001'")
     fun getOwnerBluetooth(): String
+
+    @Query("DELETE FROM owner")
+    fun truncateOwnerTable()
 }

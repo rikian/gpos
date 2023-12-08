@@ -26,13 +26,16 @@ import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.gulali.gpos.R
 import com.gulali.gpos.database.CategoryEntity
+import com.gulali.gpos.database.DateTime
 import com.gulali.gpos.database.ProductModel
+import com.gulali.gpos.database.TransactionEntity
 import com.gulali.gpos.database.UnitEntity
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import java.util.UUID
 
@@ -124,8 +127,31 @@ open class Helper {
     fun getDate(): String {
         val calendar = Calendar.getInstance()
         val currentDateAndTime = calendar.time
-        val dateFormat = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
         return dateFormat.format(currentDateAndTime)
+    }
+
+    fun dateToUnixTimestamp(date: Date): Long {
+        return date.time / 1000 // Convert milliseconds to seconds
+    }
+
+    fun unixTimestampToDate(timestamp: Long): Date {
+        return Date(timestamp * 1000) // Convert seconds to milliseconds
+    }
+
+    fun formatDateFromTimestamp(timestamp: Long): String {
+        val dateFormat = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
+        return dateFormat.format(unixTimestampToDate(timestamp))
+    }
+
+    fun formatSpecificDate(date: Date): DateTime{
+        val d = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale.getDefault()).format(date)
+        val t = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(date)
+
+        return DateTime(
+            date = d,
+            time = t,
+        )
     }
 
     fun intToRupiah(value: Int): String {
@@ -333,7 +359,7 @@ open class Helper {
                     this.intToRupiah(totalPriceAfterDiscount.toInt())
                 }
                 targetBeforeDiscount.paintFlags = targetBeforeDiscount.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-                targetBeforeDiscount.setTextColor(ContextCompat.getColor(ctx, R.color.gray))
+                targetBeforeDiscount.setTextColor(ContextCompat.getColor(ctx, R.color.text_gray))
                 targetBeforeDiscount.setTypeface(null, Typeface.ITALIC)
 
                 targetAfterDiscount.visibility = View.VISIBLE
@@ -355,6 +381,19 @@ open class Helper {
     fun strToInt(v: String): Int {
         return try {
             v.toInt()
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    fun getTotalPayment(t: TransactionEntity): Int {
+        return try {
+            var result = 0
+            result += t.totalProduct
+            result -= t.discountNominal
+            result += t.taxNominal
+            result += t.adm
+            result
         } catch (e: Exception) {
             0
         }

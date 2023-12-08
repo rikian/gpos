@@ -1,5 +1,6 @@
 package com.gulali.gpos
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -64,7 +65,7 @@ class Registration: AppCompatActivity() {
                 data.address = regAddress
                 data.phone = regPhone
                 gposRepo.createOwner(data)
-                Intent(this, Index::class.java).also { index -> startActivity(index) }
+                launchIndex(this)
             }
         }
     }
@@ -72,9 +73,13 @@ class Registration: AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         dataOwner = gposRepo.getOwner()
-        if (dataOwner.isNotEmpty()) {
-            Intent(this, Index::class.java).also { index -> startActivity(index) }
-            finish()
-        }
+        if (dataOwner.isNotEmpty()) { launchIndex(this) }
+    }
+
+    private fun launchIndex(ctx: Context) {
+        val intent = Intent(ctx, Index::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(intent)
+        finish()
     }
 }

@@ -15,6 +15,7 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.widget.Button
 import android.widget.DatePicker
 import android.widget.EditText
 import android.widget.Toast
@@ -85,7 +86,7 @@ class Index: AppCompatActivity() {
             dataOwner = gposRepo.getOwner()
 
             // index section
-            initIndex()
+            initIndex(this)
 
             // transaction section
             initTransaction()
@@ -113,6 +114,7 @@ class Index: AppCompatActivity() {
 
         if (pdBinding.productsDisplay.visibility == View.VISIBLE) {
             dataProduct = gposRepo.getProducts()
+            pdBinding.productsTotal.text = dataProduct.size.toString()
             val dtBarcode = pdBinding.inpBarcode.text.toString()
             if (dtBarcode != "") {
                 val products = helper.filterProductByBarcode(dtBarcode, dataProduct)
@@ -131,7 +133,7 @@ class Index: AppCompatActivity() {
         }
     }
 
-    private fun initIndex() {
+    private fun initIndex(ctx: Context) {
         binding.bottomNavigationView.setOnItemSelectedListener {
             when (it.itemId) {
                 R.id.transaction -> {
@@ -144,13 +146,13 @@ class Index: AppCompatActivity() {
                     pdBinding.productsDisplay.visibility = View.VISIBLE
                     tdBinding.transactionDisplay.visibility = View.GONE
                     dataProduct = gposRepo.getProducts()
-                    displayProducts(pdBinding.productList, dataProduct, this, contentResolver)
+                    displayProducts(pdBinding.productList, dataProduct, ctx, contentResolver)
                 }
                 R.id.settings -> {
                     stBinding.settingDisplay.visibility = View.VISIBLE
                     pdBinding.productsDisplay.visibility = View.GONE
                     tdBinding.transactionDisplay.visibility = View.GONE
-                    displaySetting(stBinding, dataOwner[0])
+                    displaySetting(ctx, stBinding, dataOwner[0])
                 }
                 else -> {
                     return@setOnItemSelectedListener false
@@ -160,13 +162,13 @@ class Index: AppCompatActivity() {
         }
     }
 
-    private fun displaySetting(sb: SettingBinding, oe: OwnerEntity) {
+    private fun displaySetting(ctx: Context, sb: SettingBinding, oe: OwnerEntity) {
         sb.regOwner.setText(oe.owner)
         sb.regShopName.setText(oe.shop)
         sb.regAddress.setText(oe.address)
         sb.regPhone.setText(oe.phone)
 
-        sb.updateSetting.setOnClickListener {
+        sb.updatePerin.setOnClickListener {
             val owner = sb.regOwner.text.toString().trim()
             if (owner == "") {
                 helper.generateTOA(this, "owner cannot be empty", true)
@@ -192,6 +194,31 @@ class Index: AppCompatActivity() {
             oe.address = regAddress
             oe.phone = regPhone
             gposRepo.updateOwner(oe)
+        }
+
+        sb.btnCloseAccount.setOnClickListener {
+            val builder = AlertDialog.Builder(ctx)
+            val inflater = layoutInflater
+            val dialogLayout = inflater.inflate(R.layout.dialog_close_account, null)
+            val alertDialog = builder.setView(dialogLayout).show() // Create and show the AlertDialog
+            dialogLayout.findViewById<Button>(R.id.close_no).setOnClickListener {
+                alertDialog.dismiss()
+            }
+            dialogLayout.findViewById<Button>(R.id.close_yes).setOnClickListener {
+                try {
+                    gposRepo.truncateOwnerTable()
+                    gposRepo.truncateTransactionTable()
+                    gposRepo.truncateUnitTable()
+                    gposRepo.truncateCategoriesTable()
+
+                    val intent = Intent(ctx, Registration::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                    startActivity(intent)
+                    finish()
+                } catch (e: Exception) {
+                    println(e.message)
+                }
+            }
         }
     }
 
@@ -260,7 +287,7 @@ class Index: AppCompatActivity() {
                 startActivity(it)
             }
         }
-        pdBinding.btnScanBc2.setOnClickListener {
+        pdBinding.btnScanProduct.setOnClickListener {
             scanner.startScan()
                 .addOnSuccessListener {
                     // add bib sound
@@ -287,6 +314,20 @@ class Index: AppCompatActivity() {
                 displayProducts(pdBinding.productList, products, applicationContext, contentResolver)
             }
         })
+        pdBinding.productsTotal.text = dataProduct.size.toString()
+
+        pdBinding.filterProduct.setOnClickListener {
+            val builder = AlertDialog.Builder(this)
+            val inflater = layoutInflater
+            val dialogFilterTransaction = inflater.inflate(R.layout.product_filter,null)
+            val alertDialog = builder.setView(dialogFilterTransaction)
+//            val dateStart = dialogFilterTransaction.findViewById<EditText>(R.id.f_date_start)
+//            val dateEnd = dialogFilterTransaction.findViewById<EditText>(R.id.f_date_end)
+//            dateStart.setOnClickListener{filterDate(dateStart, this)}
+//            dateEnd.setOnClickListener{filterDate(dateEnd, this)}
+            dialogFilterTransaction.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            alertDialog.show()
+        }
     }
 
     @Deprecated("Deprecated in Java")
@@ -330,7 +371,9 @@ class Index: AppCompatActivity() {
         displayTransactionAdapter = TransactionDisplay(helper, tItems, ctx)
         displayTransactionAdapter.setOnItemClickListener(object : TransactionDisplay.OnItemClickListener{
             override fun onItemClick(position: Int) {
+                val tr = tItems[position]
                 Intent(ctx, TransactionDetails::class.java).also {
+                    it.putExtra(constant.idTransaction(), tr.id)
                     startActivity(it)
                 }
             }

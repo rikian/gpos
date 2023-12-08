@@ -14,8 +14,17 @@
     <color name="header">#005B41</color>
     <color name="button">#232D3F</color>
     <color name="text">#EEF1FF</color>
-    <color name="text_gray">#989797</color>
 
+    <!-- background -->
+    <color name="background_white">#FFFFFFFF</color>
+    <color name="background_gray">#EEF5FF</color>
+
+    <!-- text   -->
+    <color name="text_white">#FFFFFFFF</color>
+    <color name="text_gray">#989797</color>
+    <color name="text_black">#FF000000</color>
+
+    <!-- currency   -->
     <color name="seribu">#857B21</color>
     <color name="duaribu">#043D3F</color>
     <color name="limaribu">#B36930</color>

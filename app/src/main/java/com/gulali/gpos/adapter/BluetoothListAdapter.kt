@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.gulali.gpos.database.ProductTransaction
+import com.gulali.gpos.R
 
 class BluetoothListAdapter(
     private val context: Context,
@@ -20,11 +20,11 @@ class BluetoothListAdapter(
     }
 
     inner class BluetoothViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val textView: TextView = itemView.findViewById(android.R.id.text1)
+        var pDevice: TextView = itemView.findViewById(R.id.device_paired)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BluetoothViewHolder {
-        val view = LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_1, parent, false)
+        val view = LayoutInflater.from(context).inflate(R.layout.list_paired_divices, parent, false)
         val viewHolder = BluetoothViewHolder(view)
         viewHolder.itemView.setOnClickListener {
             itemClickListener?.onItemClick(viewHolder.absoluteAdapterPosition)
@@ -37,7 +37,7 @@ class BluetoothListAdapter(
             itemClickListener?.onItemClick(position)
         }
 
-        holder.textView.text = items[position]
+        holder.pDevice.text = items[position]
 
     }
 

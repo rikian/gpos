@@ -85,7 +85,8 @@ class AddProduct : AppCompatActivity() {
 
         if (needUpdate && idProduct != -1) {
             try {
-                binding.apc.text = "Update Product"
+                val textUpdate = "Update Product"
+                binding.apc.text = textUpdate
                 pUpdate = gposRepo.getProductByID(idProduct)
 
                 // set default image product and created at
@@ -450,7 +451,6 @@ class AddProduct : AppCompatActivity() {
             imageFile?.delete()
             imageFile = null
         }
-
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK) {
             // Get the selected image URI
             val imageUri = data?.data

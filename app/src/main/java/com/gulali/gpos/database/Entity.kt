@@ -2,6 +2,7 @@ package com.gulali.gpos.database
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -26,8 +27,8 @@ data class CategoryEntity (
 @Entity(
     tableName = "products",
     foreignKeys = [
-        ForeignKey(entity = UnitEntity::class, parentColumns = ["id"], childColumns = ["unit"]),
-        ForeignKey(entity = CategoryEntity::class, parentColumns = ["id"], childColumns = ["category"]),
+        ForeignKey(onDelete=CASCADE, entity=UnitEntity::class, parentColumns=["id"], childColumns=["unit"]),
+        ForeignKey(onDelete=CASCADE, entity=CategoryEntity::class, parentColumns=["id"], childColumns=["category"]),
     ]
 )
 data class ProductEntity (
@@ -59,14 +60,14 @@ data class TransactionEntity (
     var taxPercent: Double,
     var adm: Int,
     var cash: Int,
-    var createdAt: String,
-    var updatedAt: String,
+    var createdAt: Long,
+    var updatedAt: Long,
 )
 
 @Entity(
     tableName = "product_transaction",
     foreignKeys = [
-        ForeignKey(entity = TransactionEntity::class, parentColumns = ["id"], childColumns = ["transactionID"]),
+        ForeignKey(onDelete=CASCADE, entity = TransactionEntity::class, parentColumns = ["id"], childColumns = ["transactionID"]),
         ForeignKey(entity = ProductEntity::class, parentColumns = ["id"], childColumns = ["pID"]),
     ]
 )

@@ -32,3 +32,8 @@ data class TransactionDetail(
     var cash: Int,
     var products: List<ProductTransaction>
 )
+
+data class DateTime(
+    var date: String = "",
+    var time: String = "",
+)

@@ -69,7 +69,9 @@
                     android:layout_height="wrap_content"
                     android:paddingBottom="5dp"
                     android:text="Category Name"
+                    android:textColor="@color/black"
                     android:textSize="11sp"
+                    android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 

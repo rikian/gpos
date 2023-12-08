@@ -29,6 +29,7 @@ class TransactionDisplay(
         var tTotal: TextView = view.findViewById(R.id.total_payment)
         var tCreate: TextView = view.findViewById(R.id.payment_created)
         var isNew: TextView = view.findViewById(R.id.is_new)
+        val payTime: TextView = view.findViewById(R.id.pay_time)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionDisplay.PDViewHolder {
@@ -53,12 +54,14 @@ class TransactionDisplay(
         val tr = transaction[position]
         val num = position + 1
         val item = "(${tr.item} item)"
+        val dateTime = helper.formatSpecificDate(helper.unixTimestampToDate(tr.createdAt))
 
         holder.tNumber.text = num.toString()
         holder.tID.text = tr.id
         holder.tItem.text = item
-        holder.tTotal.text = helper.intToRupiah(tr.totalProduct)
-        holder.tCreate.text = tr.createdAt
+        holder.tTotal.text = helper.intToRupiah(helper.getTotalPayment(tr))
+        holder.tCreate.text = dateTime.date
+        holder.payTime.text = dateTime.time
 
 //        // Check if the current item is the last one
 //        val isLastItem = position == itemCount - 1

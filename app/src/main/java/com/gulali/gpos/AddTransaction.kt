@@ -35,6 +35,7 @@ import com.gulali.gpos.database.TransactionEntity
 import com.gulali.gpos.databinding.TransactionAddBinding
 import com.gulali.gpos.helper.Helper
 import java.io.IOException
+import java.util.Calendar
 import java.util.UUID
 
 class AddTransaction: AppCompatActivity() {
@@ -70,8 +71,8 @@ class AddTransaction: AppCompatActivity() {
                 taxPercent= 0.0,
                 adm= 0,
                 cash= 0,
-                createdAt= "",
-                updatedAt= "",
+                createdAt= 0,
+                updatedAt= 0,
             )
         }
 
@@ -152,16 +153,20 @@ class AddTransaction: AppCompatActivity() {
     }
 
     private fun showPayment(ctx: Context) {
+        transactionEntity.item = productTransaction.size
         val builder = AlertDialog.Builder(this)
         val inflater = layoutInflater
         val dialogLayout = inflater.inflate(R.layout.payment_display, null)
 
         // text display
+        val totalItemPayment = "(${transactionEntity.item} item)"
+        dialogLayout.findViewById<TextView>(R.id.total_item_payment).text = totalItemPayment
+
         val subTotal = dialogLayout.findViewById<TextView>(R.id.p_sub_total)
         val totalPriceValue = helper.intToRupiah(getCurrentTotalPriceInCart())
         subTotal.text = totalPriceValue
         val totalPayment = dialogLayout.findViewById<TextView>(R.id.p_total_payment)
-        setTotalPayment(totalPayment)
+        setTotalPayment(totalPayment, transactionEntity)
         val cashReturned = dialogLayout.findViewById<TextView>(R.id.cash_returned)
         setCashReturned(cashReturned, ctx)
 
@@ -211,7 +216,7 @@ class AddTransaction: AppCompatActivity() {
                     transactionEntity.discountNominal = getDiscountNominal(transactionEntity.totalProduct,transactionEntity.discountPercent)
                     setEditTextWithRupiahFormat(discountNominal, transactionEntity.discountNominal)
                     setCashReturned(cashReturned, ctx)
-                    return setTotalPayment(totalPayment)
+                    return setTotalPayment(totalPayment, transactionEntity)
                 }
                 isFinish = true
                 discountPercent.setText(s.toString())
@@ -238,7 +243,7 @@ class AddTransaction: AppCompatActivity() {
                         transactionEntity.discountPercent = 0.0
                         discountPercent.setText("0")
                         setCashReturned(cashReturned, ctx)
-                        return setTotalPayment(totalPayment)
+                        return setTotalPayment(totalPayment, transactionEntity)
                     }
                     val userInput = helper.rupiahToInt(s.toString())
                     if (userInput == 0) {
@@ -250,7 +255,7 @@ class AddTransaction: AppCompatActivity() {
                         transactionEntity.discountNominal = 0
                         discountNominal.setText("0")
                         setCashReturned(cashReturned, ctx)
-                        return setTotalPayment(totalPayment)
+                        return setTotalPayment(totalPayment, transactionEntity)
                     }
                     if (transactionEntity.discountNominal == userInput) {
                         isFinish = true
@@ -293,7 +298,7 @@ class AddTransaction: AppCompatActivity() {
                         transactionEntity.taxPercent = 0.0
                         taxPercent.setText("0")
                         setCashReturned(cashReturned, ctx)
-                        return setTotalPayment(totalPayment)
+                        return setTotalPayment(totalPayment, transactionEntity)
                     }
                     val userInput = helper.rupiahToInt(s.toString())
                     if (userInput == 0) {
@@ -305,7 +310,7 @@ class AddTransaction: AppCompatActivity() {
                         transactionEntity.taxPercent = 0.0
                         taxPercent.setText("0")
                         setCashReturned(cashReturned, ctx)
-                        return setTotalPayment(totalPayment)
+                        return setTotalPayment(totalPayment, transactionEntity)
                     }
                     if (transactionEntity.taxNominal == userInput) {
                         isFinish = true
@@ -342,7 +347,7 @@ class AddTransaction: AppCompatActivity() {
                     transactionEntity.taxNominal = getDiscountNominal(transactionEntity.totalProduct,transactionEntity.taxPercent)
                     setEditTextWithRupiahFormat(taxNominal, transactionEntity.taxNominal)
                     setCashReturned(cashReturned, ctx)
-                    return setTotalPayment(totalPayment)
+                    return setTotalPayment(totalPayment, transactionEntity)
                 }
                 isFinish = true
                 taxPercent.setText(s.toString())
@@ -363,7 +368,7 @@ class AddTransaction: AppCompatActivity() {
                     if (isFinish) {
                         isFinish = false
                         setSelectionEditText(admNominal, cp, transactionEntity.adm)
-                        setTotalPayment(totalPayment)
+                        setTotalPayment(totalPayment, transactionEntity)
                         setCashReturned(cashReturned, ctx)
                         return
                     }
@@ -371,7 +376,7 @@ class AddTransaction: AppCompatActivity() {
                     if (userInput == 0) {
                         isFinish = true
                         transactionEntity.adm = 0
-                        setTotalPayment(totalPayment)
+                        setTotalPayment(totalPayment, transactionEntity)
                         setCashReturned(cashReturned, ctx)
                         admNominal.setText("")
                         return
@@ -439,7 +444,7 @@ class AddTransaction: AppCompatActivity() {
                     if (isFinish) {
                         isFinish = false
                         setSelectionEditText(cashConsumer, cp, transactionEntity.cash)
-                        setTotalPayment(totalPayment)
+                        setTotalPayment(totalPayment, transactionEntity)
                         setCashReturned(cashReturned, ctx)
                         return
                     }
@@ -448,7 +453,7 @@ class AddTransaction: AppCompatActivity() {
                         isFinish = true
                         transactionEntity.cash = 0
                         setCashReturned(cashReturned, ctx)
-                        setTotalPayment(totalPayment)
+                        setTotalPayment(totalPayment, transactionEntity)
                         cashConsumer.setText("")
                         return
                     }
@@ -530,7 +535,7 @@ class AddTransaction: AppCompatActivity() {
         val deviceName = gposRepo.getOwnerBluetooth()
 
         if (deviceName == "") {
-            Intent(this, Setting::class.java).also { intent ->
+            Intent(this, BluetoothSetting::class.java).also { intent ->
                 startActivity(intent)
             }
             return
@@ -598,8 +603,11 @@ class AddTransaction: AppCompatActivity() {
     }
 
     private fun saveDataTransactionToDb() {
-        transactionEntity.createdAt = helper.getDate()
-        transactionEntity.updatedAt = helper.getDate()
+        val calendar = Calendar.getInstance()
+        val date = calendar.time
+        val currentDate = helper.dateToUnixTimestamp(date)
+        transactionEntity.createdAt = currentDate
+        transactionEntity.updatedAt = currentDate
         gposRepo.saveTransaction(transactionEntity)
     }
 
@@ -903,21 +911,21 @@ class AddTransaction: AppCompatActivity() {
         edt.setSelection(selection)
     }
 
-    private fun getTotalPayment(): Int {
+    private fun getTotalPayment(t: TransactionEntity): Int {
         return try {
             var result = 0
-            result += transactionEntity.totalProduct
-            result -= transactionEntity.discountNominal
-            result += transactionEntity.taxNominal
-            result += transactionEntity.adm
+            result += t.totalProduct
+            result -= t.discountNominal
+            result += t.taxNominal
+            result += t.adm
             result
         } catch (e: Exception) {
             0
         }
     }
 
-    fun setTotalPayment(t: TextView) {
-        val totalPayment = "Rp ${helper.intToRupiah(getTotalPayment())}"
+    fun setTotalPayment(t: TextView, te: TransactionEntity) {
+        val totalPayment = "Rp ${helper.intToRupiah(getTotalPayment(te))}"
         t.text = totalPayment
     }
 
@@ -940,7 +948,7 @@ class AddTransaction: AppCompatActivity() {
     }
 
     private fun setCashReturned(t: TextView, ctx: Context) {
-        val totalPayment = getTotalPayment()
+        val totalPayment = getTotalPayment(transactionEntity)
         val cashReturned = "${helper.intToRupiah(transactionEntity.cash - totalPayment)} ,-"
 
         if (isCorrectCashReturner()) {
@@ -953,7 +961,7 @@ class AddTransaction: AppCompatActivity() {
     }
 
     private fun isCorrectCashReturner(): Boolean {
-        return transactionEntity.cash - getTotalPayment() >= 0
+        return transactionEntity.cash - getTotalPayment(transactionEntity) >= 0
     }
 
     private fun addNominalToCash(ctx: Context, n: Int, cashNominal: EditText, cashReturned: TextView) {
