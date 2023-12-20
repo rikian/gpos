@@ -33,6 +33,17 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <Switch
+            android:id="@+id/switch_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="Bar"
+            android:textColor="@color/text_white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.5" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -52,6 +63,7 @@
             android:layout_height="wrap_content">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
+                android:id="@+id/status_purchase"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:layout_scrollFlags="scroll|enterAlways">
@@ -66,8 +78,8 @@
                         android:layout_height="100dp"
                         android:layout_margin="10dp"
                         android:background="@drawable/bg_white"
-                        android:elevation="2dp"
                         android:clickable="true"
+                        android:elevation="2dp"
                         android:focusable="true"
                         android:foreground="?android:attr/selectableItemBackground"
                         app:layout_constraintBottom_toBottomOf="parent"
@@ -80,7 +92,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="20dp"
-                            android:text="Purchase Amount"
+                            android:text="Total Transaction"
                             android:textColor="@color/black"
                             android:textSize="14sp"
                             android:textStyle="bold"
@@ -89,7 +101,7 @@
                             app:layout_constraintTop_toTopOf="parent" />
 
                         <TextView
-                            android:id="@+id/textView22"
+                            android:id="@+id/dis_tot_tr"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
@@ -119,7 +131,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="20dp"
-                            android:text="Profit"
+                            android:text="Total Amount"
                             android:textColor="@color/black"
                             android:textStyle="bold"
                             app:layout_constraintEnd_toEndOf="parent"
@@ -127,7 +139,7 @@
                             app:layout_constraintTop_toTopOf="parent" />
 
                         <TextView
-                            android:id="@+id/textView25"
+                            android:id="@+id/dis_tot_amaount"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
@@ -187,7 +199,7 @@
                     app:layout_constraintTop_toTopOf="parent">
 
                     <androidx.appcompat.widget.AppCompatEditText
-                        android:id="@+id/inp_barcode"
+                        android:id="@+id/seacrh_tr"
                         android:layout_width="0dp"
                         android:layout_height="48dp"
                         android:background="@null"
@@ -197,19 +209,19 @@
                         android:singleLine="true"
                         android:textSize="14sp"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@+id/btn_scan_transaction"
+                        app:layout_constraintEnd_toStartOf="@+id/clear_search_tr"
                         app:layout_constraintHorizontal_bias="0.0"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
                         app:layout_constraintVertical_bias="0.0" />
 
                     <ImageButton
-                        android:id="@+id/btn_scan_transaction"
+                        android:id="@+id/clear_search_tr"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:background="@null"
                         android:contentDescription="button for scan barcode"
-                        android:src="@drawable/baseline_qr_code_scanner_24"
+                        android:src="@drawable/baseline_close_24"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />

@@ -13,19 +13,17 @@ import android.text.TextWatcher
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import com.bumptech.glide.Glide
-import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanner
-import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
-import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.gulali.gpos.constant.Constant
 import com.gulali.gpos.database.AdapterDb
 import com.gulali.gpos.database.CategoryEntity
+import com.gulali.gpos.database.DataTimeLong
+import com.gulali.gpos.database.HistoryStockEntity
 import com.gulali.gpos.database.ProductEntity
 import com.gulali.gpos.database.ProductModel
 import com.gulali.gpos.database.Repository
@@ -39,11 +37,11 @@ class AddProduct : AppCompatActivity() {
     private lateinit var binding: ProductAddBinding
     private lateinit var helper: Helper
     private lateinit var constant: Constant
+    private lateinit var gposRepo: Repository
     private var imageFile: File? = null
     private var imageNameFromGallery: String? = null
     private var correctedBitmap: Bitmap? = null
     private val PICK_IMAGE_REQUEST = 2
-    private lateinit var gposRepo: Repository
     private val createNew = "Create new"
     private lateinit var productEntity: ProductEntity
     private lateinit var scanner: GmsBarcodeScanner
@@ -67,6 +65,10 @@ class AddProduct : AppCompatActivity() {
             binding.anpPriceA.setRawInputType(2)
             scanner = helper.initBarcodeScanner(this)
             mediaPlayer = helper.initBeebSound(this)
+            val dateTimeLong = DataTimeLong(
+                created = 0,
+                updated = 0,
+            )
 
             // default product entity
             productEntity = ProductEntity(
@@ -78,8 +80,7 @@ class AddProduct : AppCompatActivity() {
                 unit = 0,
                 purchase = 0,
                 price = 0,
-                createdAt = "",
-                updatedAt = ""
+                date = dateTimeLong
             )
         }
 
@@ -91,7 +92,7 @@ class AddProduct : AppCompatActivity() {
 
                 // set default image product and created at
                 productEntity.image = pUpdate.img
-                productEntity.createdAt = pUpdate.created
+                productEntity.date.created = pUpdate.created
                 productEntity.purchase = pUpdate.purchase
                 productEntity.price = pUpdate.price
                 productEntity.id = pUpdate.id
@@ -108,11 +109,11 @@ class AddProduct : AppCompatActivity() {
                         .into(binding.imgPrevProduct)
                 }
                 binding.cUpdate.visibility = View.VISIBLE
+                binding.cAddStock.visibility = View.GONE
+                binding.cnpPurchase.visibility = View.GONE
                 binding.btnSaveProduct.visibility = View.GONE
                 binding.upCancel.setOnClickListener { finish() }
-                binding.upOk.setOnClickListener {
-                    saveProduct(true)
-                }
+                binding.upOk.setOnClickListener { saveProduct(true) }
             } catch (e: Exception) {
                 println(e.message)
                 helper.generateTOA(this, "product not found", true)
@@ -302,15 +303,29 @@ class AddProduct : AppCompatActivity() {
                 return
             }
 
+            productEntity.date.updated = helper.getCurrentDate()
+
             // check date
             if (isUpdate) {
-                productEntity.updatedAt = helper.getDate()
                 gposRepo.updateProduct(productEntity)
                 helper.generateTOA(this, "success update product", true)
             } else {
-                productEntity.createdAt = helper.getDate()
-                productEntity.updatedAt = helper.getDate()
-                gposRepo.insertProduct(productEntity)
+                val dateTimeLong = DataTimeLong(
+                    created = helper.getCurrentDate(),
+                    updated = helper.getCurrentDate(),
+                )
+                productEntity.date.created = helper.getCurrentDate()
+                val idProduct = gposRepo.insertProduct(productEntity)
+                val historyStockEntity = HistoryStockEntity(
+                    pID = idProduct.toInt(),
+                    inStock = productEntity.stock,
+                    outStock = 0,
+                    currentStock = productEntity.stock,
+                    purchase = productEntity.purchase,
+                    transactionID = "",
+                    date = dateTimeLong
+                )
+                gposRepo.saveHistoryStock(historyStockEntity)
                 helper.generateTOA(this, "success save product", true)
             }
 

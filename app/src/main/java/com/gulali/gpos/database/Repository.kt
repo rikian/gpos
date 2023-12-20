@@ -1,6 +1,7 @@
 package com.gulali.gpos.database
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
@@ -35,27 +36,27 @@ interface Repository {
 
     // Product
     @Query(
-        "SELECT a.id AS id, a.image AS img, a.barcode as barcode, a.name AS name, a.category AS category, a.stock AS stock, a.price AS price, a.purchase AS purchase, a.createdAt AS created, a.updatedAt AS updated, b.name AS unit, c.name AS category FROM products AS a INNER JOIN units AS b ON a.unit = b.id INNER JOIN categories AS c ON a.category = c.id"
+        "SELECT a.id AS id, a.image AS img, a.barcode as barcode, a.name AS name, a.category AS category, a.stock AS stock, a.price AS price, a.purchase AS purchase, a.created AS created, a.updated AS updated, b.name AS unit, c.name AS category FROM products AS a INNER JOIN units AS b ON a.unit = b.id INNER JOIN categories AS c ON a.category = c.id"
     )
     fun getProducts(): List<ProductModel>
 
     @Query(
-        "SELECT a.id AS id, a.image AS img, a.barcode as barcode, a.name AS name, a.stock AS stock, a.price AS price, a.purchase AS purchase, a.createdAt AS created, a.updatedAt AS updated, b.name AS unit, c.name AS category FROM products AS a INNER JOIN units AS b ON a.unit = b.id INNER JOIN categories AS c ON a.category = c.id WHERE a.name LIKE '%' || :query || '%'"
+        "SELECT a.id AS id, a.image AS img, a.barcode as barcode, a.name AS name, a.stock AS stock, a.price AS price, a.purchase AS purchase, a.created AS created, a.updated AS updated, b.name AS unit, c.name AS category FROM products AS a INNER JOIN units AS b ON a.unit = b.id INNER JOIN categories AS c ON a.category = c.id WHERE a.name LIKE '%' || :query || '%'"
     )
     fun getProductByName(query: String): List<ProductModel>
 
     @Query(
-        "SELECT a.id AS id, a.image AS img, a.barcode as barcode, a.name AS name, a.stock AS stock, a.price AS price, a.purchase AS purchase, a.createdAt AS created, a.updatedAt AS updated, b.name AS unit, c.name AS category FROM products AS a INNER JOIN units AS b ON a.unit = b.id INNER JOIN categories AS c ON a.category = c.id WHERE a.id = :query"
+        "SELECT a.id AS id, a.image AS img, a.barcode as barcode, a.name AS name, a.stock AS stock, a.price AS price, a.purchase AS purchase, a.created AS created, a.updated AS updated, b.name AS unit, c.name AS category FROM products AS a INNER JOIN units AS b ON a.unit = b.id INNER JOIN categories AS c ON a.category = c.id WHERE a.id = :query"
     )
     fun getProductByID(query: Int): ProductModel
 
     @Query(
-        "SELECT a.id AS id, a.image AS img, a.barcode as barcode, a.name AS name, a.stock AS stock, a.price AS price, a.purchase AS purchase, a.createdAt AS created, a.updatedAt AS updated, b.name AS unit, c.name AS category FROM products AS a INNER JOIN units AS b ON a.unit = b.id INNER JOIN categories AS c ON a.category = c.id WHERE a.barcode = :query"
+        "SELECT a.id AS id, a.image AS img, a.barcode as barcode, a.name AS name, a.stock AS stock, a.price AS price, a.purchase AS purchase, a.created AS created, a.updated AS updated, b.name AS unit, c.name AS category FROM products AS a INNER JOIN units AS b ON a.unit = b.id INNER JOIN categories AS c ON a.category = c.id WHERE a.barcode = :query"
     )
     fun getProductByBarcode(query: String): ProductModel?
 
     @Insert
-    fun insertProduct(data: ProductEntity)
+    fun insertProduct(data: ProductEntity): Long
 
     @Update
     fun updateProduct(data: ProductEntity)
@@ -66,15 +67,31 @@ interface Repository {
     @Query("DELETE FROM products")
     fun truncateProductsTable()
 
+    // stock history
+    @Query("SELECT * FROM history_stock WHERE pID=:id ORDER BY created DESC")
+    fun getStockHistoryById(id: Int): List<HistoryStockEntity>
+
+    @Insert
+    fun saveHistoryStock(data: HistoryStockEntity)
+
     // transaction
     @Insert
     fun saveTransaction(data: TransactionEntity)
 
-    @Query("SELECT * FROM `transaction` ORDER BY createdAt DESC")
+    @Query("SELECT * FROM `transaction` ORDER BY created DESC LIMIT 10")
     fun getTransaction(): List<TransactionEntity>
 
-    @Query("SELECT * FROM `transaction` WHERE id=:idTransaction LIMIT 1")
-    fun getTransactionById(idTransaction: String): TransactionEntity
+    @Query("SELECT * FROM `transaction` WHERE id LIKE '%' || :idTransaction || '%' ORDER BY created DESC LIMIT 5")
+    fun getTransactionById(idTransaction: String): List<TransactionEntity>
+
+    @Query("SELECT * FROM `transaction` WHERE grandTotal BETWEEN :totalStart AND :totalEnd ORDER BY created DESC LIMIT 5")
+    fun getTransactionByGranTotalBETWEEN(totalStart: Int, totalEnd: Int): List<TransactionEntity>
+
+    @Query("SELECT * FROM `transaction` WHERE grandTotal >= :totalStart ORDER BY created DESC LIMIT 5")
+    fun getTransactionByGranTotalInRange1(totalStart: Int): List<TransactionEntity>
+
+    @Query("SELECT * FROM `transaction` WHERE grandTotal <= :totalEnd ORDER BY created DESC LIMIT 5")
+    fun getTransactionByGranTotalInRange2(totalEnd: Int): List<TransactionEntity>
 
     @Query("DELETE FROM `transaction`")
     fun truncateTransactionTable()
@@ -86,13 +103,16 @@ interface Repository {
     @Insert
     fun saveProductTransaction(data: List<ProductTransaction>)
 
+    @Insert
+    fun saveOneProductTransaction(data: ProductTransaction)
+
     @Query("SELECT * FROM product_transaction")
     fun getProductTransaction(): List<ProductTransaction>
 
     @Query("SELECT * FROM product_transaction WHERE transactionID = :query")
     fun getProductTransactionByTransactionID(query: String): List<ProductTransaction>
 
-    @Query("SELECT * FROM product_transaction WHERE pID = :query")
+    @Query("SELECT * FROM product_transaction WHERE productID = :query")
     fun getProductTransactionByProductID(query: Int): List<ProductTransaction>
 
     @Query("DELETE FROM product_transaction")
@@ -116,4 +136,52 @@ interface Repository {
 
     @Query("DELETE FROM owner")
     fun truncateOwnerTable()
+}
+
+@Dao
+interface OwnerDao {
+    @Insert
+    fun createOwner(data: OwnerEntity)
+
+    @Update
+    fun updateOwner(data: OwnerEntity)
+
+    @Query("SELECT * FROM owner")
+    fun getOwner(): List<OwnerEntity>
+
+    @Query("Update owner SET bluetoothPaired=:name WHERE id='001'")
+    fun updateBluetooth(name: String)
+
+    @Query("SELECT bluetoothPaired FROM owner WHERE id='001'")
+    fun getOwnerBluetooth(): String
+
+    @Query("DELETE FROM owner")
+    fun truncateOwnerTable()
+}
+
+@Dao
+interface CartDao {
+    @Insert
+    fun saveCart(data: List<CartEntity>)
+    @Query("SELECT * FROM cart WHERE transactionID=:id")
+    fun getProductsInCart(id: String): List<CartEntity>
+    @Query("SELECT * FROM cart WHERE transactionID=:idPayment AND productID=:idProduct LIMIT 1")
+    fun getProductInCart(idPayment: String, idProduct: Int): CartEntity?
+    @Query("DELETE FROM cart WHERE transactionID=:idPayment AND productID=:idProduct")
+    fun deleteProductInCart(idPayment: String, idProduct: Int): Int
+    @Update
+    fun updateProductInCart(data: CartEntity): Int
+    @Query("SELECT COUNT(transactionID) FROM cart WHERE transactionID=:idPayment")
+    fun countProductInCart(idPayment: String): Int
+    @Query("SELECT SUM(discountNominal) FROM cart WHERE transactionID=:idPayment")
+    fun getCurrentTotalPriceInCart(idPayment: String): Int
+
+    @Insert
+    fun saveCartPayment(data: CartPaymentEntity)
+    @Query("SELECT * FROM cart_payment WHERE id=:idPayment")
+    fun getCartPayment(idPayment: String): CartPaymentEntity
+    @Query("DELETE FROM cart_payment")
+    fun truncateCartPayment()
+    @Update
+    fun updateCartPayment(data: CartPaymentEntity)
 }

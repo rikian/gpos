@@ -1,10 +1,12 @@
 package com.gulali.gpos.adapter
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.gulali.gpos.R
 import com.gulali.gpos.database.TransactionEntity
@@ -14,6 +16,7 @@ class TransactionDisplay(
     private val helper: Helper,
     transactionItems: List<TransactionEntity>,
     private val context: Context,
+    private val isSearch: Boolean
 ) : RecyclerView.Adapter<TransactionDisplay.PDViewHolder>() {
     private var itemClickListener: OnItemClickListener? = null
     private var transaction: List<TransactionEntity> = transactionItems
@@ -47,37 +50,23 @@ class TransactionDisplay(
             itemClickListener?.onItemClick(position)
         }
 
-        if (position == 0) {
-            holder.isNew.visibility = View.VISIBLE
+        if (!isSearch) {
+            if (position == 0) {
+                holder.isNew.visibility = View.VISIBLE
+            }
         }
 
         val tr = transaction[position]
         val num = position + 1
-        val item = "(${tr.item} item)"
-        val dateTime = helper.formatSpecificDate(helper.unixTimestampToDate(tr.createdAt))
+        val item = "(${tr.dataTransaction.totalItem} item)"
+        val dateTime = helper.formatSpecificDate(helper.unixTimestampToDate(tr.date.created))
 
         holder.tNumber.text = num.toString()
         holder.tID.text = tr.id
         holder.tItem.text = item
-        holder.tTotal.text = helper.intToRupiah(helper.getTotalPayment(tr))
+        holder.tTotal.text = helper.intToRupiah(tr.dataTransaction.grandTotal)
         holder.tCreate.text = dateTime.date
         holder.payTime.text = dateTime.time
-
-//        // Check if the current item is the last one
-//        val isLastItem = position == itemCount - 1
-//
-//        // Adjust bottom margin for the last item
-//        val params = holder.itemView.layoutParams as ViewGroup.MarginLayoutParams
-//        if (isLastItem) {
-//            params.bottomMargin = 50.dpToPx(context) // Convert dp to pixels
-//        } else {
-//            params.bottomMargin = 0
-//        }
-    }
-
-    private fun Int.dpToPx(context: Context): Int {
-        val density = context.resources.displayMetrics.density
-        return (this * density).toInt()
     }
 
     override fun getItemCount(): Int {
@@ -92,3 +81,19 @@ class TransactionDisplay(
         itemClickListener = listener
     }
 }
+
+//        // Check if the current item is the last one
+//        val isLastItem = position == itemCount - 1
+//
+//        // Adjust bottom margin for the last item
+//        val params = holder.itemView.layoutParams as ViewGroup.MarginLayoutParams
+//        if (isLastItem) {
+//            params.bottomMargin = 50.dpToPx(context) // Convert dp to pixels
+//        } else {
+//            params.bottomMargin = 0
+//        }
+
+//private fun Int.dpToPx(context: Context): Int {
+//    val density = context.resources.displayMetrics.density
+//    return (this * density).toInt()
+//}

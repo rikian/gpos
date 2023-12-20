@@ -91,4 +91,7 @@ dependencies {
     // google barcode
     implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0")
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
+
+    // csv
+    implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.2")
 }

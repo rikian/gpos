@@ -25,6 +25,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsCompat.toWindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.common.moduleinstall.ModuleInstall
+import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanner
 import com.gulali.gpos.adapter.ProductDisplay
 import com.gulali.gpos.adapter.TransactionDisplay
@@ -39,6 +41,7 @@ import com.gulali.gpos.databinding.ProductDisplayBinding
 import com.gulali.gpos.databinding.SettingBinding
 import com.gulali.gpos.databinding.TransactionDisplayBinding
 import com.gulali.gpos.helper.Helper
+import com.gulali.gpos.service.transaction.Transaction
 import java.util.Calendar
 
 class Index: AppCompatActivity() {
@@ -58,6 +61,15 @@ class Index: AppCompatActivity() {
     private lateinit var dataTransaction: List<TransactionEntity>
     private var doubleBackToExitPressedOnce = false
     private lateinit var dataOwner: List<OwnerEntity>
+    private var switchTD: Boolean = false
+
+    // search transaction
+    private var querySearchTransaction = ""
+    private var isSearchActive = false
+
+    // filter transaction
+    private val totalStartValue = Value(nominal = 0)
+    private val totalEndValue = Value(nominal = 0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,10 +87,17 @@ class Index: AppCompatActivity() {
                 view.onApplyWindowInsets(insets)
             }
 
-            gposRepo = AdapterDb.getGposDatabase(applicationContext).repository()
+            gposRepo = AdapterDb.getGposDatabase(this).repository()
             helper = Helper()
             constant = Constant()
             scanner = helper.initBarcodeScanner(this)
+            val moduleInstallRequest =
+                ModuleInstallRequest.newBuilder()
+                    .addApi(scanner) //Add the scanner client to the module install request
+                    .build()
+            val moduleInstallClient = ModuleInstall.getClient(this)
+            moduleInstallClient.installModules(moduleInstallRequest)
+                .addOnFailureListener {ex -> helper.generateTOA(this, ex.message.toString(), true) }
             mediaPlayer = helper.initBeebSound(this)
             linearLayoutManagerProduct = LinearLayoutManager(this)
             dataProduct = gposRepo.getProducts()
@@ -89,7 +108,7 @@ class Index: AppCompatActivity() {
             initIndex(this)
 
             // transaction section
-            initTransaction()
+            initTransaction(this)
 
             // product section
             initProduct()
@@ -106,14 +125,37 @@ class Index: AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        tdBinding.switchBar.setOnCheckedChangeListener { _, b ->
+            if (b) {
+                tdBinding.statusPurchase.visibility = View.GONE
+            } else {
+                tdBinding.statusPurchase.visibility = View.VISIBLE
+            }
+        }
+        pdBinding.switchBarProduct.setOnCheckedChangeListener { _, b ->
+            if (b) {
+                pdBinding.statusProduct.visibility = View.GONE
+            } else {
+                pdBinding.statusProduct.visibility = View.VISIBLE
+            }
+        }
 
         if (tdBinding.transactionDisplay.visibility == View.VISIBLE) {
-            displayTransaction(tdBinding.transactionList, gposRepo.getTransaction(), this)
+            if (isSearchActive) {
+                isSearchActive = false
+                return
+            }
+            dataTransaction = gposRepo.getTransaction()
+            val disTotAmount = "Rp ${helper.intToRupiah(getTotalAmountTransaction())}"
+            tdBinding.disTotAmaount.text = disTotAmount
+            tdBinding.disTotTr.text = dataTransaction.size.toString()
+            displayTransaction(tdBinding.transactionList, dataTransaction, this, false)
             return
         }
 
         if (pdBinding.productsDisplay.visibility == View.VISIBLE) {
             dataProduct = gposRepo.getProducts()
+            pdBinding.totalStock.text = getTotalStock().toString()
             pdBinding.productsTotal.text = dataProduct.size.toString()
             val dtBarcode = pdBinding.inpBarcode.text.toString()
             if (dtBarcode != "") {
@@ -128,7 +170,6 @@ class Index: AppCompatActivity() {
             }
 
             displayProducts(pdBinding.productList, dataProduct, this, contentResolver)
-
             return
         }
     }
@@ -140,6 +181,8 @@ class Index: AppCompatActivity() {
                     stBinding.settingDisplay.visibility = View.GONE
                     pdBinding.productsDisplay.visibility = View.GONE
                     tdBinding.transactionDisplay.visibility = View.VISIBLE
+                    val disTotAmount = "Rp ${helper.intToRupiah(getTotalAmountTransaction())}"
+                    tdBinding.disTotAmaount.text = disTotAmount
                 }
                 R.id.products -> {
                     stBinding.settingDisplay.visibility = View.GONE
@@ -147,6 +190,7 @@ class Index: AppCompatActivity() {
                     tdBinding.transactionDisplay.visibility = View.GONE
                     dataProduct = gposRepo.getProducts()
                     displayProducts(pdBinding.productList, dataProduct, ctx, contentResolver)
+                    pdBinding.totalStock.text = getTotalStock().toString()
                 }
                 R.id.settings -> {
                     stBinding.settingDisplay.visibility = View.VISIBLE
@@ -222,45 +266,112 @@ class Index: AppCompatActivity() {
         }
     }
 
-    private fun initTransaction() {
-        displayTransaction(tdBinding.transactionList, dataTransaction, this)
+    private fun initTransaction(ctx: Context) {
+        displayTransaction(tdBinding.transactionList, dataTransaction, this, false)
         tdBinding.btnNTransaction.setOnClickListener {
-            Intent(this, AddTransaction::class.java).also {
+            Intent(this, Transaction::class.java).also {
                 startActivity(it)
             }
         }
 
-        tdBinding.btnScanTransaction.setOnClickListener {
-            scanner.startScan()
-                .addOnSuccessListener {
-                    // add bib sound
-                    if (mediaPlayer != null && !mediaPlayer!!.isPlaying) {
-                        mediaPlayer?.start()
-                    }
+        val disTotAmount = "Rp ${helper.intToRupiah(getTotalAmountTransaction())}"
+        tdBinding.disTotAmaount.text = disTotAmount
 
-                    val dtBarcode = it.rawValue ?: return@addOnSuccessListener
-                    tdBinding.inpBarcode.setText(dtBarcode)
-                }
-                .addOnCanceledListener {
-                    // Task canceled
-                }
-                .addOnFailureListener {
-                    Toast.makeText(applicationContext, it.message, Toast.LENGTH_SHORT).show()
-                }
+        tdBinding.disTotTr.text = dataTransaction.size.toString()
+
+        tdBinding.clearSearchTr.setOnClickListener {
+            tdBinding.seacrhTr.setText("")
         }
+
+        tdBinding.seacrhTr.addTextChangedListener(object :TextWatcher{
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val currentQuery = s.toString()
+                if (currentQuery == "") {
+                    displayTransaction(tdBinding.transactionList, dataTransaction, ctx, false)
+                    return
+                }
+                if (querySearchTransaction == currentQuery) return
+                val dtSearch = gposRepo.getTransactionById(currentQuery)
+                displayTransaction(tdBinding.transactionList, dtSearch, ctx, true)
+            }
+        })
 
         tdBinding.filterTransaction.setOnClickListener {
             val builder = AlertDialog.Builder(this)
             val inflater = layoutInflater
             val dialogFilterTransaction = inflater.inflate(R.layout.transaction_filter,null)
-            val alertDialog = builder.setView(dialogFilterTransaction)
+
+            val btnApply: Button = dialogFilterTransaction.findViewById(R.id.btn_ftr_appy)
+            val btnCancel: Button = dialogFilterTransaction.findViewById(R.id.btn_ftr_cancel)
+
+            // initial filter by grand total
+            val totalStart: EditText = dialogFilterTransaction.findViewById(R.id.f_tot_start)
+            val totalEnd: EditText = dialogFilterTransaction.findViewById(R.id.f_tot_end)
+            totalStart.setRawInputType(2)
+            totalEnd.setRawInputType(2)
+
+            if (totalStartValue.nominal != 0) {
+                totalStart.setText(helper.intToRupiah(totalStartValue.nominal))
+            }
+            if (totalEndValue.nominal != 0) {
+                totalEnd.setText(helper.intToRupiah(totalEndValue.nominal))
+            }
+
+            totalStart.addTextChangedListener(SetRupiahToEditText(helper, totalStart, totalStartValue))
+            totalEnd.addTextChangedListener(SetRupiahToEditText(helper, totalEnd, totalEndValue))
+
             val dateStart = dialogFilterTransaction.findViewById<EditText>(R.id.f_date_start)
             val dateEnd = dialogFilterTransaction.findViewById<EditText>(R.id.f_date_end)
             dateStart.setOnClickListener{filterDate(dateStart, this)}
             dateEnd.setOnClickListener{filterDate(dateEnd, this)}
-            dialogFilterTransaction.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            alertDialog.show()
+
+            val alertDialog = builder.setView(dialogFilterTransaction).show()
+
+            btnApply.setOnClickListener {
+                val dateStartValue = dateStart.text
+//                if (totalStartValue.nominal != 0 && totalEndValue.nominal != 0) {
+//                    if (totalStartValue.nominal > totalEndValue.nominal) {
+//                        helper.generateTOA(ctx, "Total start must be less than or equal to total end", true)
+//                        return@setOnClickListener
+//                    }
+//                }
+//                val filterTrData =
+//                    filterTransactionByGrandTotal(totalStartValue.nominal, totalEndValue.nominal)
+//                        ?: return@setOnClickListener
+//                displayTransaction(
+//                    tList = tdBinding.transactionList,
+//                    tItems = filterTrData,
+//                    ctx = ctx,
+//                    true
+//                )
+//                alertDialog.dismiss()
+            }
+
+            btnCancel.setOnClickListener {
+                alertDialog.dismiss()
+            }
         }
+    }
+
+    private fun filterTransactionByGrandTotal(nStart: Int, nEnd: Int): List<TransactionEntity>? {
+        // between
+        if (nStart != 0 && nEnd != 0) {
+            return gposRepo.getTransactionByGranTotalBETWEEN(nStart, nEnd)
+        }
+
+        // greater than
+        if (nStart != 0) {
+            return gposRepo.getTransactionByGranTotalInRange1(nStart)
+        }
+
+        // less than
+        if (nEnd != 0) {
+            return gposRepo.getTransactionByGranTotalInRange2(nEnd)
+        }
+
+        return null
     }
 
     private fun filterDate(e: EditText, ctx: Context) {
@@ -330,6 +441,23 @@ class Index: AppCompatActivity() {
         }
     }
 
+    private fun getTotalStock(): Int {
+        var result = 0
+        for (p in dataProduct) {
+            result += p.stock
+        }
+
+        return result
+    }
+
+    private fun getTotalAmountTransaction(): Int {
+        var result = 0
+        for (t in dataTransaction) {
+            result += t.dataTransaction.grandTotal
+        }
+        return result
+    }
+
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         if (doubleBackToExitPressedOnce) {
@@ -352,7 +480,7 @@ class Index: AppCompatActivity() {
             override fun onItemClick(position: Int) {
                 try {
                     val product = products[position]
-                    Intent(ctx, AddProduct::class.java).also {
+                    Intent(ctx, ProductView::class.java).also {
                         it.putExtra(constant.needUpdate(), true)
                         it.putExtra(constant.product(), product.id)
                         startActivity(it)
@@ -367,10 +495,18 @@ class Index: AppCompatActivity() {
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun displayTransaction(tList: RecyclerView, tItems: List<TransactionEntity>, ctx: Context) {
-        displayTransactionAdapter = TransactionDisplay(helper, tItems, ctx)
+    private fun displayTransaction(
+        tList: RecyclerView,
+        tItems: List<TransactionEntity>,
+        ctx: Context,
+        isSearch: Boolean
+    ) {
+        displayTransactionAdapter = TransactionDisplay(helper, tItems, ctx, isSearch)
         displayTransactionAdapter.setOnItemClickListener(object : TransactionDisplay.OnItemClickListener{
             override fun onItemClick(position: Int) {
+                if (isSearch) {
+                    isSearchActive = true
+                }
                 val tr = tItems[position]
                 Intent(ctx, TransactionDetails::class.java).also {
                     it.putExtra(constant.idTransaction(), tr.id)
@@ -382,3 +518,44 @@ class Index: AppCompatActivity() {
         displayTransactionAdapter.notifyDataSetChanged()
     }
 }
+
+class SetRupiahToEditText(
+    private var helper: Helper,
+    private var editText: EditText,
+    private var value: Value
+): TextWatcher {
+    private var cp = 0
+    private var isFinish = false
+    override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+        cp = editText.selectionStart
+    }
+    override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+    override fun afterTextChanged(s: Editable?) {
+        try {
+            if (isFinish) {
+                isFinish = false
+                helper.setSelectionEditText(editText, cp, value.nominal)
+                return
+            }
+            val userInput = helper.rupiahToInt(s.toString())
+            if (userInput == 0) {
+                isFinish = true
+                value.nominal = 0
+                editText.setText("")
+                return
+            }
+            if (value.nominal == userInput) {
+                isFinish = true
+                helper.setEditTextWithRupiahFormat(editText, value.nominal)
+                return
+            }
+            value.nominal = userInput
+            isFinish = true
+            helper.setEditTextWithRupiahFormat(editText, value.nominal)
+        } catch (e: Exception) {
+            println(e.message.toString())
+        }
+    }
+}
+
+data class Value(var nominal: Int)

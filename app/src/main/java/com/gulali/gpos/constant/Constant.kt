@@ -15,6 +15,10 @@ class Constant {
         return "ID_TRANSACTION"
     }
 
+    fun fromPayment(): String {
+        return "FROM_PAYMENT"
+    }
+
     fun getOKGranted(): Int {
         return PackageManager.PERMISSION_GRANTED
     }

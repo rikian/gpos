@@ -15,7 +15,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.gulali.gpos.constant.Constant
 import com.gulali.gpos.database.AdapterDb
 import com.gulali.gpos.database.OwnerEntity
@@ -54,8 +53,9 @@ class Print: AppCompatActivity(), BluetoothReceiver.BluetoothStateListener {
             setContentView(binding.root)
 
             // Initialize the ActivityResultLauncher
-            requestBluetoothPermission = registerForActivityResult(ActivityResultContracts.RequestPermission())
-            { isGranted: Boolean -> return@registerForActivityResult if (isGranted) runBluetoothOperation() else finish() }
+            requestBluetoothPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+                return@registerForActivityResult if (isGranted) runBluetoothOperation() else finish()
+            }
 
             binding.stEditBuetooth.setOnClickListener{
                 Intent(this, BluetoothSetting::class.java).also { btSetting ->
@@ -91,77 +91,15 @@ class Print: AppCompatActivity(), BluetoothReceiver.BluetoothStateListener {
                 val uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb")
                 val socket = device.createRfcommSocketToServiceRecord(uuid)
 
-                val totalPrice = "Rp${helper.intToRupiah(helper.getTotalPayment(transaction))}"
-                var totalAmount = ""
-                totalAmount += "Total${
-                    String.format(
-                        "%27s",
-                        totalPrice
-                    )
-                }\n\n"
-
-                var dataPrint = ""
-                dataPrint += "\n"
-                for (p in productTransaction) {
-                    dataPrint += generateProductNameForPrint(p.pName)
-                    dataPrint += generateQtyProduct(helper.intToRupiah(p.pPrice), p.pQty.toString(), helper.intToRupiah (p.pPrice * p.pQty))
-                }
-                dataPrint += "\n"
-
-                val reset = byteArrayOf(0x1b, 0x40)
-                val fontX2 = byteArrayOf(0x1b,0x21, 0x10)
-                val characterSpacing = byteArrayOf(0x1b, 0x20, 0x09)
-                val font1x = byteArrayOf(0x1b,0x21, 0x00)
-                val bold = byteArrayOf(0x1b,0x21, 0x30)
-                val cut = byteArrayOf(0x1D, 0x56, 66, 0x00)
-                val centerText = byteArrayOf(0x1b, 0x61, 0x01)
-                val dateTime = helper.formatSpecificDate(helper.unixTimestampToDate(transaction.createdAt))
-                val rightText = byteArrayOf(0x1b, 0x61, 0x02)
-                var subTotalProduct = ""
-                subTotalProduct += "Sub total products${
-                    String.format(
-                        "%14s",
-                        helper.intToRupiah(transaction.totalProduct)
-                    )
-                }\n"
-                var discount = "Discount"
                 try {
                     socket.connect()
-                    val outputStream = socket.outputStream
-                    outputStream.write(reset)
-                    outputStream.write(fontX2)
-                    outputStream.write(centerText)
-                    outputStream.write("TOKO\n".toByteArray())
-                    outputStream.write("${owner.owner}\n".toByteArray())
-                    outputStream.write(reset)
-                    outputStream.write("${dateTime.date}\n".toByteArray())
-                    outputStream.write("id ${transaction.id}\n".toByteArray())
-                    outputStream.write("time ${dateTime.time}\n".toByteArray())
-                    outputStream.write("--------------------------------\n".toByteArray())
-                    outputStream.write(generateListProductForPrint(productTransaction).toByteArray())
-                    outputStream.write("--------------------------------\n".toByteArray())
-                    outputStream.write("${generateSubTotalProduct(transaction)}\n".toByteArray())
-                    outputStream.write("${generateDiscountPayment(transaction)}\n".toByteArray())
-                    outputStream.write("${generateTaxPayment(transaction)}\n".toByteArray())
-                    outputStream.write("${generateAdmPayment(transaction)}\n".toByteArray())
-                    outputStream.write("--------------------------------\n".toByteArray())
-                    outputStream.write(fontX2)
-                    outputStream.write(totalAmount.toByteArray())
-                    outputStream.write(reset)
-                    outputStream.write("${generateCashPayment(transaction)}\n".toByteArray())
-                    outputStream.write("${generateCashReturnedPayment(transaction)}\n".toByteArray())
-                    outputStream.write("================================\n".toByteArray())
-                    outputStream.write(centerText)
-                    outputStream.write("This receipt is valid\n".toByteArray())
-                    outputStream.write("proof of payment\n".toByteArray())
-                    outputStream.write("from the shop ${owner.owner}.\n".toByteArray())
-                    outputStream.write("For further information, please call ${owner.phone}, or visit the shop address at ${owner.address}\n".toByteArray())
-                    outputStream.write("\nthank you for visiting\n\n".toByteArray())
-                    outputStream.write("---\n".toByteArray())
-                    outputStream.write(reset)
-                    outputStream.write(cut)
-                    outputStream.flush()
-                    outputStream.close()
+                    val oS = socket.outputStream
+                    val dataPrint = printer.generateStruckPayment(transaction, owner, productTransaction)
+                    for (d in dataPrint) {
+                        oS.write(d)
+                    }
+                    oS.flush()
+                    oS.close()
                 } catch (e: Exception) {
                     helper.generateTOA(this, "can not connect to device. is printer on?", true)
                     socket.close()
@@ -187,9 +125,9 @@ class Print: AppCompatActivity(), BluetoothReceiver.BluetoothStateListener {
         binding.pairedName.text = owner.bluetoothPaired
         idTransaction = intent.getStringExtra(constant.idTransaction()) ?: ""
         if (idTransaction == "") return finish()
-        transaction = gposRepo.getTransactionById(idTransaction)
+        transaction = gposRepo.getTransactionById(idTransaction)[0]
         productTransaction = gposRepo.getProductTransactionByTransactionID(transaction.id)
-        textForPrint = generateStruckPayment(productTransaction, transaction, owner)
+        textForPrint = generateStruckPayment(productTransaction, transaction)
         binding.textPrint.text = textForPrint
     }
 
@@ -246,11 +184,15 @@ class Print: AppCompatActivity(), BluetoothReceiver.BluetoothStateListener {
         alertDialog?.show() // Show the AlertDialog after configuring it
     }
 
-    private fun generateStruckPayment(pt: List<ProductTransaction>, t: TransactionEntity, owner: OwnerEntity): String {
+    private fun generateStruckPayment(pt: List<ProductTransaction>, t: TransactionEntity): String {
         var dataPrint = ""
         for (p in pt) {
-            dataPrint += "${p.pName}\n"
-            dataPrint += generateQtyProduct(helper.intToRupiah(p.pPrice), p.pQty.toString(), helper.intToRupiah (p.pPrice * p.pQty))
+            dataPrint += "${p.product.name}\n"
+            dataPrint += generateQtyProduct(
+                helper.intToRupiah(p.product.price),
+                p.product.quantity.toString(),
+                helper.intToRupiah (p.product.price * p.product.quantity)
+            )
         }
         dataPrint += "\n\n\n"
         dataPrint += "Total${
@@ -262,59 +204,19 @@ class Print: AppCompatActivity(), BluetoothReceiver.BluetoothStateListener {
         dataPrint += "Cash${
             String.format(
                 "%28s",
-                helper.intToRupiah(t.cash)
+                helper.intToRupiah(t.dataTransaction.cash)
             )
         }\n"
         dataPrint += "${String.format("%32s", "------------")}\n"
         dataPrint += "Returned${
             String.format(
                 "%24s",
-                helper.intToRupiah(t.cash - helper.getTotalPayment(t))
+                helper.intToRupiah(t.dataTransaction.cash - helper.getTotalPayment(t))
             )
         }\n\n\n"
         dataPrint += "${String.format("%-32s", "Thank You")}\n\n"
 
         return dataPrint
-    }
-
-    private fun generateProductNameForPrint(product: String): String {
-        val result = StringBuilder()
-        val lineLength = 28
-
-        for (i in product.indices step lineLength) {
-            val endIndex = i + lineLength
-            val line = if (endIndex <= product.length) {
-                product.substring(i, endIndex)
-            } else {
-                product.substring(i)
-            }
-            result.append("$line\n")
-        }
-
-        return result.toString()
-    }
-
-    private fun generateListProductForPrint(pt: List<ProductTransaction>): String {
-        var result = ""
-        for (p in pt) {
-            result += generateProductNameForPrint(p.pName)
-            if (p.pDiscount > 0.0) {
-                result += generateQtyProduct(helper.intToRupiah(p.pPrice), p.pQty.toString(), "")
-                val totalPrice = p.pPrice * p.pQty
-                val discountPercentage = p.pDiscount / 100
-                val totalDiscount = discountPercentage * totalPrice
-                val totalPriceAfterDiscount = totalPrice - totalDiscount
-                // format string after discount
-                val disStr = String.format("%18s", "disc (${p.pDiscount}%)")
-                val totStr = String.format("%12s", helper.intToRupiah(totalPriceAfterDiscount.toInt()))
-                // passing to result
-                result += "$disStr  $totStr"
-                result += "\n"
-            } else {
-                result += generateQtyProduct(helper.intToRupiah(p.pPrice), p.pQty.toString(), helper.intToRupiah (p.pPrice * p.pQty))
-            }
-        }
-        return result
     }
 
     private fun generateQtyProduct(price: String, qty: String, total: String): String {
@@ -323,74 +225,5 @@ class Print: AppCompatActivity(), BluetoothReceiver.BluetoothStateListener {
         val totalFormatted = String.format("%10s", total)
 
         return "$priceFormatted  x $qtyFormatted  $totalFormatted\n"
-    }
-
-    private fun generateSubTotalProduct(t: TransactionEntity): String {
-        var textFormatted = "Sub total products"
-        textFormatted += "\n"
-        val t1 = String.format("%-15s", "(${t.item}) item")
-        val t2 = String.format("%17s", helper.intToRupiah(transaction.totalProduct))
-        textFormatted += t1
-        textFormatted += t2
-        return textFormatted
-    }
-
-    private fun generateDiscountPayment(t: TransactionEntity): String {
-        var textFormatted = ""
-        textFormatted += String.format("%-18s", "Discount payment")
-        if (t.discountPercent > 0.0) {
-            textFormatted += "\n"
-            textFormatted += String.format("%-10s", "(${t.discountPercent}%)")
-            textFormatted += String.format("%22s", "- ${helper.intToRupiah(t.discountNominal)}")
-        } else {
-            textFormatted += if (t.discountNominal == 0) {
-                String.format("%14s", "0")
-            } else {
-                String.format("%14s", "- ${helper.intToRupiah(t.discountNominal)}")
-            }
-        }
-        return textFormatted
-    }
-
-    private fun generateTaxPayment(t: TransactionEntity): String {
-        var textFormatted = ""
-        textFormatted += String.format("%-18s", "Tax")
-        if (t.taxPercent > 0.0) {
-            textFormatted += "\n"
-            textFormatted += String.format("%-10s", "(${t.taxPercent}%)")
-            textFormatted += String.format("%22s", helper.intToRupiah(t.taxNominal))
-        } else {
-            textFormatted += if (t.taxNominal == 0) {
-                String.format("%14s", "0")
-            } else {
-                String.format("%14s", helper.intToRupiah(t.taxNominal))
-            }
-        }
-        return textFormatted
-    }
-
-    private fun generateAdmPayment(t: TransactionEntity): String {
-        var textFormatted = ""
-        textFormatted += String.format("%-18s", "Adm")
-        textFormatted += String.format("%14s", helper.intToRupiah(t.adm))
-        return textFormatted
-    }
-    private fun generateCashPayment(t: TransactionEntity): String {
-        var textFormatted = ""
-        textFormatted += String.format("%-20s", "Cash")
-        textFormatted += String.format("%12s", helper.intToRupiah(t.cash))
-        return textFormatted
-    }
-    private fun generateCashReturnedPayment(t: TransactionEntity): String {
-        var totalPayment = 0
-        totalPayment += t.totalProduct
-        totalPayment += t.taxNominal
-        totalPayment += t.adm
-        totalPayment -= t.discountNominal
-
-        var textFormatted = ""
-        textFormatted += String.format("%-20s", "Returned")
-        textFormatted += String.format("%12s", helper.intToRupiah(t.cash - totalPayment))
-        return textFormatted
     }
 }

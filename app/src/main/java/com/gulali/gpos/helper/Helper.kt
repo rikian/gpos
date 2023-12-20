@@ -154,6 +154,12 @@ open class Helper {
         )
     }
 
+    fun getCurrentDate(): Long {
+        val calendar = Calendar.getInstance()
+        val date = calendar.time
+        return this.dateToUnixTimestamp(date)
+    }
+
     fun intToRupiah(value: Int): String {
         val v = value.toString()
         val vp = v.chunked(1)
@@ -204,7 +210,8 @@ open class Helper {
         qtyPlus.setOnClickListener {
             val value = input.text.toString().toIntOrNull()
             if (value != null) {
-                input.setText((value + 1).toString())
+                val newVal = (value + 1).toString()
+                input.setText(newVal)
             }
         }
     }
@@ -331,11 +338,37 @@ open class Helper {
         return matchingProducts
     }
 
-    fun setPriceAfterDiscount(targetBeforeDiscount: TextView, targetAfterDiscount: TextView, discount: Double, price: Int, qty: Int, needRp: Boolean, ctx: Context) {
+    fun getDiscountNominal(discount: Double, price: Int, qty: Int): Int{
+        val totalPrice = price * qty
+        val discountPercentage = discount / 100
+        val discountNominal = discountPercentage * totalPrice
+        return discountNominal.toInt()
+    }
+
+    fun getDiscountNominal(nominal: Int, discount: Double): Int {
+        val discountPercentage = discount / 100
+        val totalDiscount = discountPercentage * nominal
+        return totalDiscount.toInt()
+    }
+
+    fun getTotalPriceAfterDiscount(discount: Double, price: Int, qty: Int): Int {
+        val totalPrice = price * qty
+        val discountNominal = getDiscountNominal(discount, price, qty)
+        return totalPrice - discountNominal
+    }
+
+    fun setPriceAfterDiscount(
+        targetBeforeDiscount: TextView,
+        targetAfterDiscount: TextView,
+        discount: Double,
+        price: Int,
+        qty: Int,
+        needRp: Boolean,
+        ctx: Context
+    ) {
         try {
             val totalPrice = price * qty
-            var totalPriceStr = ""
-            totalPriceStr = if (needRp) {
+            val totalPriceStr: String = if (needRp) {
                 "Rp ${this.intToRupiah(totalPrice)}"
             } else {
                 this.intToRupiah(totalPrice)
@@ -350,9 +383,7 @@ open class Helper {
             if (discount == 0.0) {
                 targetAfterDiscount.visibility = View.GONE
             } else {
-                val discountPercentage = discount / 100
-                val totalDiscount = discountPercentage * totalPrice
-                val totalPriceAfterDiscount = totalPrice - totalDiscount
+                val totalPriceAfterDiscount = getTotalPriceAfterDiscount(discount, price, qty)
                 val totalPriceAfterDiscountStr = if (needRp) {
                     "Rp ${this.intToRupiah(totalPriceAfterDiscount.toInt())}"
                 } else {
@@ -389,13 +420,24 @@ open class Helper {
     fun getTotalPayment(t: TransactionEntity): Int {
         return try {
             var result = 0
-            result += t.totalProduct
-            result -= t.discountNominal
-            result += t.taxNominal
-            result += t.adm
+            result += t.dataTransaction.subTotalProduct
+            result -= t.dataTransaction.discountNominal
+            result += t.dataTransaction.taxNominal
+            result += t.dataTransaction.adm
             result
         } catch (e: Exception) {
             0
         }
+    }
+
+    // for set rupiah in edit text
+    fun setSelectionEditText(edt: EditText, sS: Int, sE: Int) {
+        val selection = if (sS < sE.toString().length)
+            sS else this.intToRupiah(sE).length
+        edt.setSelection(selection)
+    }
+
+    fun setEditTextWithRupiahFormat(e: EditText, nominal: Int) {
+        e.setText(this.intToRupiah(nominal))
     }
 }

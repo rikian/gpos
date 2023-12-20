@@ -5,39 +5,41 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.gulali.gpos.R
-import com.gulali.gpos.database.ProductTransaction
+import com.gulali.gpos.database.DataProduct
 import com.gulali.gpos.helper.Helper
+import com.gulali.gpos.service.transaction.Transaction
 
-class ProductCart(
+class ProductInCart(
     private val helper: Helper,
-    listProducts: MutableList<ProductTransaction>,
+    listProducts: List<Transaction.Product>,
     private val context: Context,
-) : RecyclerView.Adapter<ProductCart.ProductViewHolder>() {
+) : RecyclerView.Adapter<ProductInCart.ProductViewHolder>() {
     private var itemClickListener: OnItemClickListener? = null
-    private var products: MutableList<ProductTransaction> = listProducts
+    private var products: List<Transaction.Product> = listProducts
 
     init {
         this.products = listProducts
     }
 
     inner class ProductViewHolder(view: View): RecyclerView.ViewHolder(view) {
-        var pId: TextView = view.findViewById(R.id.id_product)
         var pName: TextView = view.findViewById(R.id.pname_cart)
         var pPrice: TextView = view.findViewById(R.id.pprice_cart)
         var pQty: TextView = view.findViewById(R.id.pstock_cart)
+        val displayDiscount = view.findViewById<ConstraintLayout>(R.id.c_discount)
+        val displayDiscountPercent = view.findViewById<TextView>(R.id.dis_percent)
         var pPriceBeforeDiscount: TextView = view.findViewById(R.id.pp_tot_cart)
         var pPriceAfterDiscount: TextView = view.findViewById(R.id.pp_tot_cart_dis)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductCart.ProductViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductInCart.ProductViewHolder {
         val view = LayoutInflater.from(context).inflate(R.layout.product_cart, parent, false)
         val viewHolder = ProductViewHolder(view)
         viewHolder.itemView.setOnClickListener {
             itemClickListener?.onItemClick(viewHolder.absoluteAdapterPosition)
         }
-
         return ProductViewHolder(view)
     }
 
@@ -47,19 +49,26 @@ class ProductCart(
         }
 
         val p = products[position]
-        h.pName.text = p.product.name
-        h.pPrice.text = helper.intToRupiah(p.product.price)
-        h.pQty.text = p.product.quantity.toString()
+        h.pName.text = p.data.name
+        h.pPrice.text = helper.intToRupiah(p.data.price)
+        h.pQty.text = p.data.quantity.toString()
 
         helper.setPriceAfterDiscount(
             h.pPriceBeforeDiscount,
             h.pPriceAfterDiscount,
-            p.product.discountPercent,
-            p.product.price,
-            p.product.quantity,
+            p.data.discountPercent,
+            p.data.price,
+            p.data.quantity,
             false,
             context
         )
+
+        if (p.data.discountPercent > 0.0) {
+            h.displayDiscount.visibility = View.VISIBLE
+            h.displayDiscountPercent.visibility = View.VISIBLE
+            val disStr = "(${p.data.discountPercent} %)"
+            h.displayDiscountPercent.text = disStr
+        }
     }
 
     override fun getItemCount(): Int {

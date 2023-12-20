@@ -1,5 +1,6 @@
 package com.gulali.gpos.database
 
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
@@ -11,8 +12,8 @@ data class UnitEntity (
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     var name: String,
-    var createdAt: String,
-    var updatedAt: String,
+    @Embedded
+    var date: DataTimeLong
 )
 
 @Entity(tableName = "categories", indices = [Index(value = ["name"], unique = true)])
@@ -20,8 +21,8 @@ data class CategoryEntity (
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     var name: String,
-    var createdAt: String,
-    var updatedAt: String,
+    @Embedded
+    var date: DataTimeLong
 )
 
 @Entity(
@@ -42,8 +43,27 @@ data class ProductEntity (
     var unit: Int,
     var purchase: Int,
     var price: Int,
-    var createdAt: String,
-    var updatedAt: String,
+    @Embedded
+    var date: DataTimeLong
+)
+
+@Entity(
+    tableName = "history_stock",
+    foreignKeys = [
+        ForeignKey(onDelete=CASCADE, entity=ProductEntity::class, parentColumns=["id"], childColumns=["pID"]),
+    ]
+)
+data class HistoryStockEntity(
+    @PrimaryKey(autoGenerate = true)
+    var id: Int = 0,
+    var pID: Int,
+    var inStock: Int,
+    var outStock: Int,
+    var currentStock: Int,
+    var purchase: Int,
+    val transactionID: String,
+    @Embedded
+    var date: DataTimeLong
 )
 
 @Entity(
@@ -52,37 +72,54 @@ data class ProductEntity (
 data class TransactionEntity (
     @PrimaryKey(autoGenerate = false)
     var id: String,
-    var item: Int,
-    var totalProduct: Int,
-    var discountNominal: Int,
-    var discountPercent: Double,
-    var taxNominal: Int,
-    var taxPercent: Double,
-    var adm: Int,
-    var cash: Int,
-    var createdAt: Long,
-    var updatedAt: Long,
+    @Embedded
+    var dataTransaction: DataTransaction,
+    @Embedded
+    var date: DataTimeLong
 )
 
 @Entity(
     tableName = "product_transaction",
     foreignKeys = [
         ForeignKey(onDelete=CASCADE, entity = TransactionEntity::class, parentColumns = ["id"], childColumns = ["transactionID"]),
-        ForeignKey(entity = ProductEntity::class, parentColumns = ["id"], childColumns = ["pID"]),
+        ForeignKey(entity = ProductEntity::class, parentColumns = ["id"], childColumns = ["productID"]),
     ]
 )
 data class ProductTransaction(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val transactionID: String,
-    var pID: Int,
-    var pName: String,
-    var pQty: Int = 1,
-    var pUnit: String,
-    var pPrice: Int,
-    var pDiscount: Double = 0.0,
-    var cAt: String,
-    var uAt: String,
+    @Embedded
+    var product: DataProduct,
+    @Embedded
+    var date: DataTimeLong
+)
+
+// cartPayment
+@Entity(
+    tableName = "cart_payment"
+)
+data class CartPaymentEntity(
+    @PrimaryKey(autoGenerate = false)
+    var id: String,
+    @Embedded
+    var dataTransaction: DataTransaction
+)
+
+// cart
+@Entity(
+    tableName = "cart",
+    foreignKeys = [
+        ForeignKey(onDelete=CASCADE, entity = CartPaymentEntity::class, parentColumns = ["id"], childColumns = ["transactionID"]),
+        ForeignKey(onDelete=CASCADE, entity = ProductEntity::class, parentColumns = ["id"], childColumns = ["productID"]),
+    ]
+)
+data class CartEntity(
+    @PrimaryKey(autoGenerate = true)
+    var id: Int = 0,
+    var transactionID: String,
+    @Embedded
+    var product: DataProduct
 )
 
 @Entity(
@@ -101,6 +138,6 @@ data class OwnerEntity(
     var taxNominal: Int,
     var adm: Int,
     var bluetoothPaired: String,
-    var createdAt: String,
-    var updatedAt: String,
+    @Embedded
+    var date: DataTimeLong
 )

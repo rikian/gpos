@@ -16,7 +16,7 @@ import com.gulali.gpos.helper.Helper
 class ProductSearch(
     listProducts: List<ProductModel>,
     private val helper: Helper,
-    private val context: Context,
+    private val ctx: Context,
     private val cr: ContentResolver
 ) : RecyclerView.Adapter<ProductSearch.ProductViewHolder>() {
     private var itemClickListener: OnItemClickListener? = null
@@ -35,7 +35,7 @@ class ProductSearch(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductSearch.ProductViewHolder {
-        val view = LayoutInflater.from(context).inflate(R.layout.product_search, parent, false)
+        val view = LayoutInflater.from(ctx).inflate(R.layout.product_search, parent, false)
         val viewHolder = ProductViewHolder(view)
         viewHolder.itemView.setOnClickListener {
             itemClickListener?.onItemClick(viewHolder.absoluteAdapterPosition)
@@ -55,7 +55,7 @@ class ProductSearch(
         holder.pPrice.text = helper.intToRupiah(product.price)
         val uri = helper.getUriFromGallery(cr, product.img)
         if (uri != null) {
-            Glide.with(context)
+            Glide.with(ctx)
                 .load(uri)
                 .into(holder.pImg)
         }

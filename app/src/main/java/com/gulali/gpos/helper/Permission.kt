@@ -7,7 +7,10 @@ import android.os.Build
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.ContextCompat
 
-class Permission(private val ctx: Context, private val funRequest: ActivityResultLauncher<String>) {
+class Permission(
+    private val ctx: Context,
+    private val funRequest: ActivityResultLauncher<String>
+) {
     val granted = PackageManager.PERMISSION_GRANTED
     private fun isBluetoothPermissionGranted(): Boolean {
         return ContextCompat.checkSelfPermission(ctx, Manifest.permission.BLUETOOTH) == granted

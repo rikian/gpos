@@ -46,11 +46,19 @@ class TransactionItem(
         }
 
         val p = products[position]
-        h.pName.text = p.pName
-        h.pPrice.text = helper.intToRupiah(p.pPrice)
-        h.pQty.text = p.pQty.toString()
+        h.pName.text = p.product.name
+        h.pPrice.text = helper.intToRupiah(p.product.price)
+        h.pQty.text = p.product.quantity.toString()
 
-        helper.setPriceAfterDiscount(h.pPriceBeforeDiscount, h.pPriceAfterDiscount, p.pDiscount, p.pPrice, p.pQty, false, context)
+        helper.setPriceAfterDiscount(
+            h.pPriceBeforeDiscount,
+            h.pPriceAfterDiscount,
+            p.product.discountPercent,
+            p.product.price,
+            p.product.quantity,
+            false,
+            context
+        )
     }
 
     override fun getItemCount(): Int {

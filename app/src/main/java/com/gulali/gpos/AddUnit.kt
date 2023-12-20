@@ -3,6 +3,7 @@ package com.gulali.gpos
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.gulali.gpos.database.AdapterDb
+import com.gulali.gpos.database.DataTimeLong
 import com.gulali.gpos.database.Repository
 import com.gulali.gpos.database.UnitEntity
 import com.gulali.gpos.databinding.UnitAddBinding
@@ -33,10 +34,14 @@ class AddUnit : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            val dateTimeLong = DataTimeLong(
+                created = helper.getCurrentDate(),
+                updated = helper.getCurrentDate(),
+            )
+
             unitEntity = UnitEntity(
                 name = unitName,
-                createdAt = helper.getDate(),
-                updatedAt = helper.getDate()
+                date = dateTimeLong
             )
 
             try {

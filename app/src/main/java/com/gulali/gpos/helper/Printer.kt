@@ -13,8 +13,8 @@ class Printer(private val h: Helper) {
     private val centerText = byteArrayOf(0x1b, 0x61, 0x01)
 //    private val rightText = byteArrayOf(0x1b, 0x61, 0x02)
 
-    fun generateStruckPayment(t: TransactionEntity, o: OwnerEntity, p: List<ProductTransaction>): List<ByteArray> {
-        val dateTime = this.h.formatSpecificDate(this.h.unixTimestampToDate(t.createdAt))
+    fun generateStruckDisplay(t: TransactionEntity, o: OwnerEntity, p: List<ProductTransaction>): List<ByteArray> {
+        val dateTime = this.h.formatSpecificDate(this.h.unixTimestampToDate(t.date.created))
         val result = mutableListOf<ByteArray>()
         result.add(reset)
         result.add(fontX2)
@@ -51,28 +51,74 @@ class Printer(private val h: Helper) {
 
         return result
     }
+    fun generateStruckPayment(t: TransactionEntity, o: OwnerEntity, p: List<ProductTransaction>): List<ByteArray> {
+        val dateTime = this.h.formatSpecificDate(this.h.unixTimestampToDate(t.date.created))
+        val result = mutableListOf<ByteArray>()
+        result.add(reset)
+        result.add(fontX2)
+        result.add(centerText)
+        result.add("SHOP\n".toByteArray())
+        result.add("${o.owner}\n".toByteArray())
+        result.add(reset)
+        result.add("${dateTime.date}\n".toByteArray())
+        result.add("id ${t.id}\n".toByteArray())
+        result.add("time ${dateTime.time}\n".toByteArray())
+        result.add("--------------------------------\n".toByteArray())
+        result.add(this.generateProductListForPrint(p).toByteArray())
+        result.add("--------------------------------\n".toByteArray())
+        result.add("${this.generateSubTotalProduct(t)}\n".toByteArray())
+        result.add("${this.generateDiscountPayment(t)}\n".toByteArray())
+        result.add("${this.generateTaxPayment(t)}\n".toByteArray())
+        result.add("${this.generateAdmPayment(t)}\n".toByteArray())
+        result.add("--------------------------------\n".toByteArray())
+        result.add(fontX2)
+        result.add(this.generateGrandTotal(t).toByteArray())
+        result.add(reset)
+        result.add("${this.generateCashPayment(t)}\n".toByteArray())
+        result.add("${this.generateCashReturnedPayment(t)}\n".toByteArray())
+        result.add("================================\n".toByteArray())
+        result.add(centerText)
+        result.add("This receipt is valid\n".toByteArray())
+        result.add("proof of payment\n".toByteArray())
+        result.add("from the shop ${o.owner}.\n".toByteArray())
+        result.add("For further information, please call ${o.phone}, or visit the shop address at ${o.address}\n".toByteArray())
+        result.add("\nthank you for visiting\n\n".toByteArray())
+        result.add("---\n".toByteArray())
+        result.add(reset)
+        result.add(cut)
 
+        return result
+    }
     private fun generateProductListForPrint(pt: List<ProductTransaction>): String {
         var result = ""
         for (p in pt) {
-            result += this.generateProductName(p.pName)
-            if (p.pDiscount > 0.0) {
-                result += this.generateProductQty(this.h.intToRupiah(p.pPrice), p.pQty.toString(), "")
-                val totalPrice = p.pPrice * p.pQty
-                val discountPercentage = p.pDiscount / 100
+            result += this.generateProductName(p.product.name)
+            if (p.product.discountPercent > 0.0) {
+                result += this.generateProductQty(
+                    this.h.intToRupiah(p.product.price),
+                    p.product.quantity.toString(),
+                    ""
+                )
+                val totalPrice = p.product.price * p.product.quantity
+                val discountPercentage = p.product.discountPercent / 100
                 val totalDiscount = discountPercentage * totalPrice
                 val totalPriceAfterDiscount = totalPrice - totalDiscount
                 // passing to result
-                result += String.format("%18s", "disc (${p.pDiscount}%)")
+                result += String.format("%18s", "disc (${p.product.discountPercent}%)")
                 result += String.format("%14s", h.intToRupiah(totalPriceAfterDiscount.toInt()))
             } else {
-                result += this.generateProductQty(this.h.intToRupiah(p.pPrice), p.pQty.toString(), this.h.intToRupiah (p.pPrice * p.pQty))
+                result += this.generateProductQty(
+                    this.h.intToRupiah(p.product.price),
+                    p.product.quantity.toString(),
+                    this.h.intToRupiah (
+                        p.product.price * p.product.quantity
+                    )
+                )
             }
             result += "\n"
         }
         return result
     }
-
     private fun generateProductName(product: String): String {
         val result = StringBuilder()
         val lineLength = 28
@@ -89,7 +135,6 @@ class Printer(private val h: Helper) {
 
         return result.toString()
     }
-
     private fun generateProductQty(price: String, qty: String, total: String): String {
         val priceFormatted = String.format("%12s", price)
         val qtyFormatted = String.format("%4s", qty)
@@ -97,76 +142,71 @@ class Printer(private val h: Helper) {
 
         return "$priceFormatted  x $qtyFormatted  $totalFormatted"
     }
-
     private fun generateSubTotalProduct(t: TransactionEntity): String {
         var textFormatted = "Sub total products"
         textFormatted += "\n"
-        val t1 = String.format("%-15s", "(${t.item}) item")
-        val t2 = String.format("%17s", this.h.intToRupiah(t.totalProduct))
+        val t1 = String.format("%-15s", "(${t.dataTransaction.totalItem}) item")
+        val t2 = String.format("%17s", this.h.intToRupiah(t.dataTransaction.subTotalProduct))
         textFormatted += t1
         textFormatted += t2
         return textFormatted
     }
-
     private fun generateDiscountPayment(t: TransactionEntity): String {
         var textFormatted = ""
         textFormatted += String.format("%-18s", "Discount payment")
-        if (t.discountPercent > 0.0) {
+        if (t.dataTransaction.discountPercent > 0.0) {
             textFormatted += "\n"
-            textFormatted += String.format("%-10s", "(${t.discountPercent}%)")
-            textFormatted += String.format("%22s", "- ${this.h.intToRupiah(t.discountNominal)}")
+            textFormatted += String.format("%-10s", "(${t.dataTransaction.discountPercent}%)")
+            textFormatted += String.format("%22s", "- ${this.h.intToRupiah(t.dataTransaction.discountNominal)}")
         } else {
-            textFormatted += if (t.discountNominal == 0) {
+            textFormatted += if (t.dataTransaction.discountNominal == 0) {
                 String.format("%14s", "0")
             } else {
-                String.format("%14s", "- ${this.h.intToRupiah(t.discountNominal)}")
+                String.format("%14s", "- ${this.h.intToRupiah(t.dataTransaction.discountNominal)}")
             }
         }
         return textFormatted
     }
-
     private fun generateTaxPayment(t: TransactionEntity): String {
         var textFormatted = ""
         textFormatted += String.format("%-18s", "Tax")
-        if (t.taxPercent > 0.0) {
+        if (t.dataTransaction.taxPercent > 0.0) {
             textFormatted += "\n"
-            textFormatted += String.format("%-10s", "(${t.taxPercent}%)")
-            textFormatted += String.format("%22s", this.h.intToRupiah(t.taxNominal))
+            textFormatted += String.format("%-10s", "(${t.dataTransaction.taxPercent}%)")
+            textFormatted += String.format("%22s", this.h.intToRupiah(t.dataTransaction.taxNominal))
         } else {
-            textFormatted += if (t.taxNominal == 0) {
+            textFormatted += if (t.dataTransaction.taxNominal == 0) {
                 String.format("%14s", "0")
             } else {
-                String.format("%14s", this.h.intToRupiah(t.taxNominal))
+                String.format("%14s", this.h.intToRupiah(t.dataTransaction.taxNominal))
             }
         }
         return textFormatted
     }
-
     private fun generateAdmPayment(t: TransactionEntity): String {
         var textFormatted = ""
         textFormatted += String.format("%-18s", "Adm")
-        textFormatted += String.format("%14s", this.h.intToRupiah(t.adm))
+        textFormatted += String.format("%14s", this.h.intToRupiah(t.dataTransaction.adm))
         return textFormatted
     }
     private fun generateCashPayment(t: TransactionEntity): String {
         var textFormatted = ""
         textFormatted += String.format("%-20s", "Cash")
-        textFormatted += String.format("%12s", this.h.intToRupiah(t.cash))
+        textFormatted += String.format("%12s", this.h.intToRupiah(t.dataTransaction.cash))
         return textFormatted
     }
     private fun generateCashReturnedPayment(t: TransactionEntity): String {
         var totalPayment = 0
-        totalPayment += t.totalProduct
-        totalPayment += t.taxNominal
-        totalPayment += t.adm
-        totalPayment -= t.discountNominal
+        totalPayment += t.dataTransaction.subTotalProduct
+        totalPayment += t.dataTransaction.taxNominal
+        totalPayment += t.dataTransaction.adm
+        totalPayment -= t.dataTransaction.discountNominal
 
         var textFormatted = ""
         textFormatted += String.format("%-20s", "Returned")
-        textFormatted += String.format("%12s", this.h.intToRupiah(t.cash - totalPayment))
+        textFormatted += String.format("%12s", this.h.intToRupiah(t.dataTransaction.cash - totalPayment))
         return textFormatted
     }
-
     private fun generateGrandTotal(t: TransactionEntity): String {
         val totalPrice = "Rp${this.h.intToRupiah(this.h.getTotalPayment(t))}"
         return "Total${String.format("%27s", totalPrice)}\n\n"

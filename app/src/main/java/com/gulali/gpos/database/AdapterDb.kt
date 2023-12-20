@@ -12,27 +12,29 @@ import androidx.room.RoomDatabase
         UnitEntity::class,
         TransactionEntity::class,
         ProductTransaction::class,
-        CategoryEntity::class ],
-    version = 1.1.toInt()
+        CategoryEntity::class,
+        HistoryStockEntity::class,
+        CartEntity::class,
+        CartPaymentEntity::class],
+    version = 8.1.toInt()
 )
 abstract class AdapterDb: RoomDatabase() {
     abstract fun repository(): Repository
+    abstract fun ownerDao(): OwnerDao
+    abstract fun cartDao(): CartDao
+
     companion object {
         @Volatile
         private var INSTANCE: AdapterDb? = null
 
-        fun getGposDatabase(context: Context): AdapterDb {
+        fun getGposDatabase(ctx: Context): AdapterDb {
             val tmplInstant = INSTANCE
             if (tmplInstant != null) {
                 return tmplInstant
             }
 
             synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AdapterDb::class.java,
-                    "gpos"
-                )
+                val instance = Room.databaseBuilder(ctx, AdapterDb::class.java, "gpos")
                     .allowMainThreadQueries()
                     .fallbackToDestructiveMigration()
                     .build()

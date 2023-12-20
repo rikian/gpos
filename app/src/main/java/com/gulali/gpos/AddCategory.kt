@@ -1,11 +1,11 @@
 package com.gulali.gpos
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.gulali.gpos.database.AdapterDb
 import com.gulali.gpos.database.CategoryEntity
+import com.gulali.gpos.database.DataTimeLong
 import com.gulali.gpos.database.Repository
-import com.gulali.gpos.database.UnitEntity
 import com.gulali.gpos.databinding.CategoryAddBinding
 import com.gulali.gpos.helper.Helper
 
@@ -31,10 +31,14 @@ class AddCategory : AppCompatActivity() {
                     return@setOnClickListener
                 }
 
+                val dateTimeLong = DataTimeLong(
+                    created = helper.getCurrentDate(),
+                    updated = helper.getCurrentDate(),
+                )
+
                 categoryEntity = CategoryEntity(
                     name = categoryName,
-                    createdAt = helper.getDate(),
-                    updatedAt = helper.getDate()
+                    date = dateTimeLong
                 )
 
                 try {
