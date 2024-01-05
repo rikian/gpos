@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.gulali.gpos.database.repositories.Products
+import com.gulali.gpos.database.repositories.Transactions
 
 @Database(
     entities = [
@@ -14,11 +16,15 @@ import androidx.room.RoomDatabase
         ProductTransaction::class,
         CategoryEntity::class,
         HistoryStockEntity::class,
+        TransactionEntityHistory::class,
+        TransactionEntityProductHistory::class,
         CartEntity::class,
         CartPaymentEntity::class],
-    version = 8.1.toInt()
+    version = 10.1.toInt()
 )
 abstract class AdapterDb: RoomDatabase() {
+    abstract fun products(): Products
+    abstract fun transaction(): Transactions
     abstract fun repository(): Repository
     abstract fun ownerDao(): OwnerDao
     abstract fun cartDao(): CartDao

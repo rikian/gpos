@@ -51,6 +51,7 @@ class Printer(private val h: Helper) {
 
         return result
     }
+
     fun generateStruckPayment(t: TransactionEntity, o: OwnerEntity, p: List<ProductTransaction>): List<ByteArray> {
         val dateTime = this.h.formatSpecificDate(this.h.unixTimestampToDate(t.date.created))
         val result = mutableListOf<ByteArray>()

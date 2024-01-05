@@ -40,9 +40,6 @@
             android:name=".service.transaction.Transaction"
             android:exported="false" />
         <activity
-            android:name=".service.Transaction"
-            android:exported="false" />
-        <activity
             android:name=".HistoryStock"
             android:exported="false" />
         <activity
@@ -50,7 +47,8 @@
             android:exported="false" />
         <activity
             android:name=".TransactionDetails"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".AddCategory"
             android:exported="false" />
@@ -77,10 +75,6 @@
         <activity
             android:name=".Main"
             android:exported="false" />
-        <activity
-            android:name=".AddTransaction"
-            android:exported="false"
-            android:screenOrientation="portrait" />
         <activity
             android:name=".Print"
             android:exported="false" />

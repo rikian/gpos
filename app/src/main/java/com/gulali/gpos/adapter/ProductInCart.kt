@@ -8,17 +8,15 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.gulali.gpos.R
-import com.gulali.gpos.database.DataProduct
 import com.gulali.gpos.helper.Helper
-import com.gulali.gpos.service.transaction.Transaction
 
 class ProductInCart(
     private val helper: Helper,
-    listProducts: List<Transaction.Product>,
+    listProducts: List<com.gulali.gpos.service.transaction.Product>,
     private val context: Context,
 ) : RecyclerView.Adapter<ProductInCart.ProductViewHolder>() {
     private var itemClickListener: OnItemClickListener? = null
-    private var products: List<Transaction.Product> = listProducts
+    private var products: List<com.gulali.gpos.service.transaction.Product> = listProducts
 
     init {
         this.products = listProducts
@@ -28,8 +26,8 @@ class ProductInCart(
         var pName: TextView = view.findViewById(R.id.pname_cart)
         var pPrice: TextView = view.findViewById(R.id.pprice_cart)
         var pQty: TextView = view.findViewById(R.id.pstock_cart)
-        val displayDiscount = view.findViewById<ConstraintLayout>(R.id.c_discount)
-        val displayDiscountPercent = view.findViewById<TextView>(R.id.dis_percent)
+        val displayDiscount: ConstraintLayout = view.findViewById(R.id.c_discount)
+        val displayDiscountPercent: TextView = view.findViewById(R.id.dis_percent)
         var pPriceBeforeDiscount: TextView = view.findViewById(R.id.pp_tot_cart)
         var pPriceAfterDiscount: TextView = view.findViewById(R.id.pp_tot_cart_dis)
     }

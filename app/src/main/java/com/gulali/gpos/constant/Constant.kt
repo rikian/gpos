@@ -19,7 +19,7 @@ class Constant {
         return "FROM_PAYMENT"
     }
 
-    fun getOKGranted(): Int {
-        return PackageManager.PERMISSION_GRANTED
+    fun requestDetailTransaction(): Int {
+        return 1
     }
 }

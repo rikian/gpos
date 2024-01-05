@@ -72,11 +72,49 @@ data class HistoryStockEntity(
 data class TransactionEntity (
     @PrimaryKey(autoGenerate = false)
     var id: String,
+    var edited: Boolean = false,
     @Embedded
     var dataTransaction: DataTransaction,
     @Embedded
     var date: DataTimeLong
 )
+
+@Entity(
+    tableName = "transaction_entity_history",
+    foreignKeys = [
+        ForeignKey(onDelete=CASCADE, entity = TransactionEntity::class, parentColumns = ["id"], childColumns = ["transactionID"]),
+    ]
+)
+data class TransactionEntityHistory(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val transactionID: String,
+    var version: Int,
+    @Embedded
+    var dataTransaction: DataTransaction,
+    @Embedded
+    var date: DataTimeLong
+)
+
+@Entity(
+    tableName = "transaction_entity_product_history",
+    foreignKeys = [
+        ForeignKey(onDelete=CASCADE, entity = TransactionEntity::class, parentColumns = ["id"], childColumns = ["transactionID"]),
+        ForeignKey(entity = ProductEntity::class, parentColumns = ["id"], childColumns = ["productID"]),
+    ]
+)
+data class TransactionEntityProductHistory(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val transactionID: String,
+    var version: Int,
+    @Embedded
+    var product: DataProduct,
+    @Embedded
+    var date: DataTimeLong
+)
+
+
 
 @Entity(
     tableName = "product_transaction",

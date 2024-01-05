@@ -49,3 +49,40 @@ data class DataTransaction(
     var cash: Int,
     var grandTotal: Int = 0,
 )
+
+data class CountAndSum(
+    val count: Int,
+    val sum: Int
+)
+
+data class TransactionsModel(
+    var count: CountAndSum,
+    var list: List<TransactionEntity>
+)
+
+data class ParamTransactionFilter(
+    var totalStart: IntObj,
+    var totalEnd: IntObj,
+    var dateStart: Long,
+    var dateEnd: Long,
+    var pIndex: IntObj,
+    var pSize: Int
+)
+
+data class DataFilter(
+    var t: TransactionsModel,
+    var tIndex: Int,
+    var tPage: Int
+)
+
+data class IntObj(
+    var value: Int = 0
+)
+
+data class BoolObj(
+    var value: Boolean = false
+)
+
+data class StringObj(
+    var value: String = ""
+)

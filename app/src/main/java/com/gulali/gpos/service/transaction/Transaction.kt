@@ -2,9 +2,9 @@ package com.gulali.gpos.service.transaction
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.AlertDialog
 import android.bluetooth.BluetoothManager
-import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -43,7 +42,6 @@ import com.gulali.gpos.database.ProductTransaction
 import com.gulali.gpos.database.Repository
 import com.gulali.gpos.database.TransactionEntity
 import com.gulali.gpos.databinding.TransactionAddBinding
-import com.gulali.gpos.helper.BluetoothHelper
 import com.gulali.gpos.helper.BluetoothReceiver
 import com.gulali.gpos.helper.Helper
 import com.gulali.gpos.helper.Permission
@@ -81,7 +79,6 @@ class Transaction : AppCompatActivity(), BluetoothReceiver.BluetoothStateListene
     // bluetooth for print
     private var alertDialogForPrintStruck: AlertDialog? = null
     private var alertDialogForShowTurnOnBluetooth: AlertDialog? = null
-    private lateinit var bluetoothHelper: BluetoothHelper
     private lateinit var requestBluetoothPermission: ActivityResultLauncher<String>
     private lateinit var permission: Permission
     private lateinit var bluetoothManager: BluetoothManager
@@ -148,8 +145,7 @@ class Transaction : AppCompatActivity(), BluetoothReceiver.BluetoothStateListene
                         h = helper,
                         ctx = this@Transaction,
                         cr = contentResolver,
-                        cart = cart,
-                        binding = binding
+                        cart = cart
                     )
                     binding.productSearchView.adapter = showAvailableProducts(pr)
                 }
@@ -652,6 +648,11 @@ class Transaction : AppCompatActivity(), BluetoothReceiver.BluetoothStateListene
                         date= date
                     ))
                 }
+                val result = true // Set this based on whether data has changed or not
+                val resultIntent = Intent().apply {
+                    // Set any data to be returned, if needed
+                }
+                setResult(if (result) Activity.RESULT_OK else Activity.RESULT_CANCELED, resultIntent)
                 alertDialog.dismiss()
                 showAlertDialogForPrintStruck()
             } catch (e: Exception) {
@@ -776,15 +777,6 @@ class Transaction : AppCompatActivity(), BluetoothReceiver.BluetoothStateListene
             alertDialogForShowTurnOnBluetooth?.dismiss()
         }
         alertDialogForShowTurnOnBluetooth?.show() // Show the AlertDialog after configuring it
-    }
-
-    private fun runBluetoothOperation() {
-        // Check if Bluetooth permission is already granted
-        if (!permission.checkBluetoothPermission()) return
-        bluetoothManager = this.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val bluetoothAdapter = bluetoothManager.adapter
-        if (bluetoothAdapter == null) finish()
-        if (!bluetoothAdapter.isEnabled) showDialogTurnOnBluetooth(this)
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -1148,28 +1140,6 @@ class Transaction : AppCompatActivity(), BluetoothReceiver.BluetoothStateListene
 
         return  result
     }
-
-    data class StatusCart(
-        var subTotalProduct: Int,
-        var totalItem: Int
-    )
-
-    data class Pr(
-        var products: List<ProductModel>,
-        var idPayment: String,
-        var ly: LayoutInflater,
-        var h: Helper,
-        var ctx: Context,
-        var cr: ContentResolver,
-        var cart: List<Product>,
-        var binding: TransactionAddBinding
-    )
-
-    data class Product(
-        var data: DataProduct,
-        var img: String,
-        var stock: Int
-    )
 
     override fun onBluetoothConnected() {}
 

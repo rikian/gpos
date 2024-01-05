@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 
 @Dao
@@ -67,37 +68,22 @@ interface Repository {
     @Query("DELETE FROM products")
     fun truncateProductsTable()
 
+    // transaction
+    @Query("SELECT * FROM `transaction` WHERE id=:idPayment")
+    fun getTransactionById(idPayment: String): List<TransactionEntity>
+
     // stock history
-    @Query("SELECT * FROM history_stock WHERE pID=:id ORDER BY created DESC")
+    @Query("SELECT * FROM history_stock WHERE pID=:id ORDER BY created DESC LIMIT 10")
     fun getStockHistoryById(id: Int): List<HistoryStockEntity>
 
     @Insert
     fun saveHistoryStock(data: HistoryStockEntity)
 
-    // transaction
     @Insert
     fun saveTransaction(data: TransactionEntity)
 
-    @Query("SELECT * FROM `transaction` ORDER BY created DESC LIMIT 10")
-    fun getTransaction(): List<TransactionEntity>
-
-    @Query("SELECT * FROM `transaction` WHERE id LIKE '%' || :idTransaction || '%' ORDER BY created DESC LIMIT 5")
-    fun getTransactionById(idTransaction: String): List<TransactionEntity>
-
-    @Query("SELECT * FROM `transaction` WHERE grandTotal BETWEEN :totalStart AND :totalEnd ORDER BY created DESC LIMIT 5")
-    fun getTransactionByGranTotalBETWEEN(totalStart: Int, totalEnd: Int): List<TransactionEntity>
-
-    @Query("SELECT * FROM `transaction` WHERE grandTotal >= :totalStart ORDER BY created DESC LIMIT 5")
-    fun getTransactionByGranTotalInRange1(totalStart: Int): List<TransactionEntity>
-
-    @Query("SELECT * FROM `transaction` WHERE grandTotal <= :totalEnd ORDER BY created DESC LIMIT 5")
-    fun getTransactionByGranTotalInRange2(totalEnd: Int): List<TransactionEntity>
-
     @Query("DELETE FROM `transaction`")
     fun truncateTransactionTable()
-
-//    @Query()
-//    fun getTransactionDetail(idTransaction: String): TransactionDetail
 
     // product transaction
     @Insert

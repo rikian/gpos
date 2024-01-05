@@ -94,4 +94,10 @@ dependencies {
 
     // csv
     implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.2")
+
+    // swipe refresh layout
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01")
+
+    // facebook shimmer
+    implementation("com.facebook.shimmer:shimmer:0.5.0")
 }

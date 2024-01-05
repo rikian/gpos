@@ -135,6 +135,48 @@ open class Helper {
         return date.time / 1000 // Convert milliseconds to seconds
     }
 
+    fun parseDateStrToUnix(dateString: String): Long {
+        return try {
+            // Define the date format
+            val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+            // Parse the string to a Date object
+            val date = dateFormat.parse(dateString)
+
+            // If the date is not null, convert it to Unix timestamp in seconds
+            date?.let {
+                return@let dateToUnixTimestamp(it)
+            } ?: 0L
+        } catch (e: Exception) {
+            0L
+        }
+    }
+
+    fun parseToEndDateUnix(dateString: String): Long {
+        return try {
+            // Define the date format
+            val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+            // Parse the string to a Date object
+            val date = dateFormat.parse(dateString)
+
+            // If the date is not null, set the time to the end of the day
+            date?.let {
+                val calendar = Calendar.getInstance().apply {
+                    time = it
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
+                    set(Calendar.SECOND, 59)
+                    set(Calendar.MILLISECOND, 999)
+                }
+
+                return dateToUnixTimestamp(calendar.time)
+            } ?: 0L
+        } catch (e: Exception) {
+            0L
+        }
+    }
+
     fun unixTimestampToDate(timestamp: Long): Date {
         return Date(timestamp * 1000) // Convert seconds to milliseconds
     }
@@ -158,6 +200,24 @@ open class Helper {
         val calendar = Calendar.getInstance()
         val date = calendar.time
         return this.dateToUnixTimestamp(date)
+    }
+
+    fun getCurrentDatePlus1(): Long {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_MONTH, 1) // Add 1 day to the current date
+        val date = calendar.time
+        return dateToUnixTimestamp(date)
+    }
+
+    fun getCurrentEndDate(): Long {
+        val calendar = Calendar.getInstance()
+        // Set the time to 23:59:59 for the current day
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val date = calendar.time
+        return dateToUnixTimestamp(date)
     }
 
     fun intToRupiah(value: Int): String {
